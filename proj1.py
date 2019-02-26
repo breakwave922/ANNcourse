@@ -8,7 +8,7 @@ import sys
 import random
 np.random.seed(2000)  # this is what I used to get your random numbers!!!
 
-
+###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
 def tanh(x, derive=False):
     if derive:

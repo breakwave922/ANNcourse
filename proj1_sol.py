@@ -10,6 +10,7 @@ import random
 from ipywidgets import IntProgress
 import time
 
+###teacher's solution###
 # parameters
 np.random.seed(2000)  # this is what I used to get your random numbers!!!
 eta = 0.2  # learning rate
