@@ -12,7 +12,7 @@ np.random.seed(2000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
-def tanh(x, derive=False):
+def acti(x, derive=False):
     if derive:
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
@@ -35,18 +35,24 @@ train13_dat=np.concatenate((train1_dat,train3_dat),axis=0)  ##merge two data
 #define several dimension para
 img_dim=28   ##image dim
 layerh_n=2   ## #of neurons in hidden layer
+layero_n=2
 #imagesc( reshape(Matrix1_Test(:,1),[28 28]) )
 
 #initialize wgt
 n1_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-1
 n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
+b1 = np.random.normal(0, 1, (1,)) #bias
+b2 = np.random.normal(0, 1, (1,)) #bias
 
-no_w1 = np.random.normal(0, 1, (2,))    ##hidden1 to output layer
-no_w2 = np.random.normal(0, 1, (2,))    ##hidden2 to output layer
+no_w1 = np.random.normal(0, 1, (layerh_n+1,))    ## for output layer neuron1,including bias
+no_w2 = np.random.normal(0, 1, (layerh_n+1,))    ## for output layer neuron2,including bias
 
 
 # learning rate
 eta = 0.2
+
+# target output
+y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 
 ###############################################
 # Epochs
@@ -65,21 +71,32 @@ for k in range(epoch):
         # what index?
         inx = inds[i]
     # forward pass
-        v = np.ones(layerh_n,)  # last one is for bias
+        v = np.ones(layerh_n+1,)  # last one is for bias
         for j in range(layerh_n):
             if j==0:
-                v[j]=np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),n1_w).sum()
-                v[j] = tanh(v[j])
+                v[j] = np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),n1_w).sum()+b1
+                v[j] = acti(v[j])
             else:
-                v[j]=np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),n2_w).sum()
-                v[j] = tanh(v[j])
+                v[j] = np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),n2_w).sum()+b2
+                v[j] = acti(v[j])
 
         oo = np.array([np.dot(v, no_w1),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
-        o = tanh(oo)  # result of output 0&1 !!!
+        o = acti(oo)  # result of output 0&1 !!!
 
 
          ###calculating error
         if train13_dat[inx,-1]==1:
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx]), 2.0))
+            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[0,:]), 2.0)).sum()
         else:
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx]), 2.0))
+            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[1,:]), 2.0)).sum()
+
+        # backprop time!!! ################################
+
+        # output layer
+        delta_ow1 = np.ones((layero_n + 1, 1))   ##last one is for bias
+        delta_ow2 = np.ones((layero_n + 1, 1))
+        delta_1 = o - y[inx]
+        delta_2 = acti(o, derive=True)
+        delta_ow1 = v * delta_1[0] * delta_2[0]
+        delta_ow2 = v * delta_1[1] * delta_2[1]
+
