@@ -93,10 +93,10 @@ for k in range(epoch):
         delta_2 = tanh(o, derive=True)
 
         # now, lets prop it back to the weights and bias
-        delta_ow = np.ones((2*layer2_n+1, ))   ###for output wgt
+        delta_ow = np.zeros((2*layer2_n+1, ))   ###for output wgt
 
-        delta_hw1 = np.ones((share_wgt_size+1, layer2_n))  ####for hidden layer wgt update
-        delta_hw2 = np.ones((share_wgt_size+1, layer2_n))  ####for hidden layer wgt update
+        delta_hw1 = np.zeros((share_wgt_size+1, layer2_n))  ####for hidden layer wgt update
+        delta_hw2 = np.zeros((share_wgt_size+1, layer2_n))  ####for hidden layer wgt update
 
         for j in range(2 * layer2_n+1):
             delta_ow[j] = v[j] * (delta_1 * delta_2)  ##including bias

@@ -39,17 +39,16 @@ layero_n=2
 #imagesc( reshape(Matrix1_Test(:,1),[28 28]) )
 
 #initialize wgt
-n1_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-1
-n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
-b1 = np.random.normal(0, 1, (1,)) #bias
-b2 = np.random.normal(0, 1, (1,)) #bias
+nh_w = np.random.normal(0, 1, (img_dim,img_dim,layerh_n))   ##hidden layer feature maps-1&2
+#n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
+b_h = np.random.normal(0, 1, (layerh_n,)) #bias
+#b_h2 = np.random.normal(0, 1, (1,)) #bias
 
-no_w1 = np.random.normal(0, 1, (layerh_n+1,))    ## for output layer neuron1,including bias
-no_w2 = np.random.normal(0, 1, (layerh_n+1,))    ## for output layer neuron2,including bias
+no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neuron1,including bias, each row of wgt is used for 1 output neuron
 
 
 # learning rate
-eta = 0.2
+eta = 0.1
 
 # target output
 y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
@@ -57,7 +56,7 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 ###############################################
 # Epochs
 ###############################################
-epoch = 10  # how many epochs? (each epoch will pass all 4 data points through)
+epoch = 2000  # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(train13_dat,0))  # array of our training indices (data point index references)
 
@@ -66,21 +65,18 @@ for k in range(epoch):
     err[k] = 0
 
     # random shuffle of data each epoch
-    # inds = np.random.permutation(inds)
+    inds = np.random.permutation(inds)
     for i in range(np.size(inds)):
         # what index?
         inx = inds[i]
     # forward pass
         v = np.ones(layerh_n+1,)  # last one is for bias
         for j in range(layerh_n):
-            if j==0:
-                v[j] = np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),n1_w).sum()+b1
-                v[j] = acti(v[j])
-            else:
-                v[j] = np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),n2_w).sum()+b2
-                v[j] = acti(v[j])
+            v[j] = np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+            v[j] = acti(v[j])
 
-        oo = np.array([np.dot(v, no_w1),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
+        #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
+        oo = no_w @ v
         o = acti(oo)  # result of output 0&1 !!!
 
 
@@ -91,12 +87,36 @@ for k in range(epoch):
             err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[1,:]), 2.0)).sum()
 
         # backprop time!!! ################################
-
         # output layer
-        delta_ow1 = np.ones((layero_n + 1, 1))   ##last one is for bias
-        delta_ow2 = np.ones((layero_n + 1, 1))
-        delta_1 = o - y[inx]
-        delta_2 = acti(o, derive=True)
-        delta_ow1 = v * delta_1[0] * delta_2[0]
-        delta_ow2 = v * delta_1[1] * delta_2[1]
+        delta_ow = np.zeros((layero_n, layerh_n+1))   ##last col is for bias
 
+        if train13_dat[inx, -1] == 1:
+            delta_1 = o - y[0, :]
+        else:
+            delta_1 = o - y[1, :]
+        delta_2 = acti(o, derive=True)
+
+        for uuu in range(layero_n):
+            for hhh in range(layerh_n+1):
+                delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]
+
+         # for hidden layer
+        delta_nh=np.zeros((img_dim,img_dim,layerh_n))
+        delta_bh=np.zeros(layerh_n,)
+        for hh in range(layerh_n):
+            delta_h = acti(v[hh], derive=True)
+            for mm in range(layero_n):
+                delta_nh[:,:,hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*train13_dat[inx,0:-1].reshape(img_dim,img_dim)
+                delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h
+
+        # update rule, so old value + eta weighted version of delta's above!
+        nh_w = nh_w + (-1.0) * eta * delta_nh
+        b_h = b_h + (-1.0) * eta * delta_bh
+        no_w = no_w + (-1.0) * eta * delta_ow
+
+# plot it
+plt.plot(err)
+plt.ylabel('Error')
+plt.xlabel('Epoch')
+plt.title('Convergence Plot')
+plt.show()
