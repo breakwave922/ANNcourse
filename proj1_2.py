@@ -6,6 +6,8 @@ from IPython.display import display
 from IPython.display import clear_output
 import sys
 import random
+import csv
+
 np.random.seed(2000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
@@ -15,7 +17,31 @@ def tanh(x, derive=False):
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
 
-# define six training samples
+# read training/test images
+train1_fname='./Part2_dat/Part2_1_Train.csv'
+train3_fname='./Part2_dat/Part2_3_Train.csv'
+'''with open('./Part2_dat/Part2_1_Train.csv') as f:
+    reader = csv.reader(f)
+    for col in reader:
+        print(col)'''
+train1_dat = np.genfromtxt(train1_fname, delimiter=',')
+train3_dat = np.genfromtxt(train3_fname, delimiter=',')
+
+
+img_dim=28   ##image dim
+
+#imagesc( reshape(Matrix1_Test(:,1),[28 28]) )
+
+#initialize wgt
+n1_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-1
+n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
+
+no_w1 = np.random.normal(0, 1, (1,2))    ##hidden1 to output layer
+no_w2 = np.random.normal(0, 1, (1,2))    ##hidden2 to output layer
+
+
+
+
 X = np.array ()
 
 # its labels
