@@ -70,9 +70,10 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 ###############################################
 # Epochs
 ###############################################
+traindata=train13_dat
 epoch = 5000 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
-inds = np.arange(np.size(train13_dat,0))  # array of our training indices (data point index references)
+inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
 display(f)  # display the bar!
 
@@ -88,7 +89,7 @@ for k in range(epoch):
     # forward pass
         v = np.ones(layerh_n+1,)  # last one is for bias
         for j in range(layerh_n):
-            v[j] = np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+            v[j] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
             v[j] = acti(v[j])
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
@@ -97,7 +98,7 @@ for k in range(epoch):
 
 
          ###calculating error
-        if train13_dat[inx,-1]==1:
+        if traindata[inx,-1]==1:
             err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[0,:]), 2.0)).sum()
         else:
             err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[1,:]), 2.0)).sum()
@@ -106,7 +107,7 @@ for k in range(epoch):
         # output layer
         delta_ow = np.zeros((layero_n, layerh_n+1))   ##last col is for bias
 
-        if train13_dat[inx, -1] == 1:
+        if traindata[inx, -1] == 1:
             delta_1 = o - y[0, :]
         else:
             delta_1 = o - y[1, :]
@@ -122,7 +123,7 @@ for k in range(epoch):
         for hh in range(layerh_n):
             delta_h = acti(v[hh], derive=True)
             for mm in range(layero_n):
-                delta_nh[:,:,hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*train13_dat[inx,0:-1].reshape(img_dim,img_dim)
+                delta_nh[:,:,hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
                 delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h
 
         # update rule, so old value + eta weighted version of delta's above!
@@ -138,14 +139,14 @@ plt.title('Convergence Plot')
 plt.show()
 
 # run through out data, what should label be, what did we get?
-'''inds = np.random.permutation(inds)
+inds = np.random.permutation(inds)
 for i in range(np.size(inds)):
         # what index?
     inx = inds[i]
     # forward pass
     v = np.ones(layerh_n+1,)  # last one is for bias
     for j in range(layerh_n):
-        v[j] = np.multiply(train13_dat[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+        v[j] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
         v[j] = acti(v[j])
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
@@ -153,11 +154,11 @@ for i in range(np.size(inds)):
     o = acti(oo)  # result of output 0&1 !!!
 
 
-    print("Sample " + str(i) + ": label " + str(train13_dat[inx,-1]) + ": got " + str(o))'''
+    print("Sample " + str(i) + ": label " + str(traindata[inx,-1]) + ": got " + str(o))
 
 
 #### using final trained wgt to test
-testdata=train13_dat
+testdata=test13_dat
 inds = np.arange(np.size(testdata,0))  # array of our training indices (data point index references)
 inds = np.random.permutation(inds)
 for i in range(np.size(inds)):
