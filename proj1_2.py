@@ -10,7 +10,7 @@ import random
 import csv
 import time
 
-np.random.seed(2000)  # this is what I used to get your random numbers!!!
+np.random.seed(1000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
