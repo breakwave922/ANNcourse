@@ -91,13 +91,13 @@ for k in range(epoch):
         inx = inds[i]
     # forward pass
         v = np.ones(layerh_n+1,)  # last one is for bias
-        k=1   ###to record number of hidden layer output
+        kk=0   ###to record number of hidden layer output
         for j in range(feature_n):
             for jlr in range(sliding_o):   #scan from left to right
                 for jud in range(sliding_o): #scan from up to down
-                v[k] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
-                v[k] = acti(v[k])
-                k+=1
+                v[kk] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+                v[kk] = acti(v[k])
+                kk+=1
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
         oo = no_w @ v
