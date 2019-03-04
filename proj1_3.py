@@ -33,27 +33,6 @@ test3_fname='./Part2_dat/Part2_3_Test.csv'
 test1_dat = np.genfromtxt(test1_fname, delimiter=',')
 test3_dat = np.genfromtxt(test3_fname, delimiter=',')
 
-
-###last column is the right value that img represents
-'''chararray=np.chararray((train1_dat.shape[0], 1),unicode=True)
-chararray[:]='1'
-train1_dat=np.append(train1_dat,chararray,axis=1)
-
-chararray=np.chararray((train3_dat.shape[0], 1),unicode=True)
-chararray[:]='3'
-train3_dat=np.append(train3_dat,chararray,axis=1)
-
-train13_dat=np.concatenate((train1_dat,train3_dat),axis=0)  ##merge two data
-
-chararray=np.chararray((test1_dat.shape[0], 1),unicode=True)
-chararray[:]='1'
-test1_dat=np.append(test1_dat,chararray,axis=1)
-
-chararray=np.chararray((test3_dat.shape[0], 1),unicode=True)
-chararray[:]='3'
-test3_dat=np.append(test3_dat,chararray,axis=1)
-test13_dat=np.concatenate((test1_dat,test3_dat),axis=0)  ##merge two data'''
-
 ###last column is the right value that img represents
 train1_dat=np.append(train1_dat,np.ones((train1_dat.shape[0],1)),axis=1)
 train3_dat=np.append(train3_dat,3*np.ones((train3_dat.shape[0],1)),axis=1)
@@ -67,16 +46,16 @@ test13_dat=np.concatenate((test1_dat,test3_dat),axis=0)  ##merge two data
 
 #define several dimension para
 img_dim=28   ##image dim
-share_wgt_dim=28 ## share wgt dim
-feature_n=2    ## feature map number
+share_wgt_dim=7 ## share wgt dim
+feature_n=16    ## feature map number
 sliding_o=img_dim-share_wgt_dim+1  ## sliding output size
 layerh_n=sliding_o**2*feature_n   ## #of neurons in hidden layer
-layero_n=2   ## # of neurons in output layer
+layero_n=10   ## # of neurons in output layer
 #imagesc( reshape(Matrix1_Test(:,1),[28 28]) )
 #plt.imshow(train13_dat[0,0:-1].reshape(img_dim,img_dim))
 
 #initialize wgt
-nh_w = np.random.normal(0, 1, (share_wgt_dim,share_wgt_dim,layerh_n))   ##hidden layer feature maps-1&2
+nh_w = np.random.normal(0, 1, (share_wgt_dim,share_wgt_dim,feature_n))   ##hidden layer feature maps
 #n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
 b_h = np.random.normal(0, 1, (feature_n,)) #bias
 #b_h2 = np.random.normal(0, 1, (1,)) #bias
@@ -88,13 +67,14 @@ no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neur
 eta = 0.1
 
 # target output
-y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
+y=np.diag(np.ones((layero_n,)))
+
 
 ###############################################
 # Epochs
 ###############################################
 traindata=train13_dat
-epoch = 2000 # how many epochs?
+epoch = 50 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
@@ -111,17 +91,13 @@ for k in range(epoch):
         inx = inds[i]
     # forward pass
         v = np.ones(layerh_n+1,)  # last one is for bias
-        kk=0   ###to record number of hidden layer output
+        k=1   ###to record number of hidden layer output
         for j in range(feature_n):
             for jlr in range(sliding_o):   #scan from left to right
                 for jud in range(sliding_o): #scan from up to down
-                    v[kk] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
-                    v[kk] = acti(v[kk])
-                    kk+=1
-
-            ''' for j in range(layerh_n):
-         v[j] = np.multiply(traindata[inx, 0:-1].reshape(img_dim, img_dim), nh_w[:, :, j]).sum() + b_h[j]
-         v[j] = acti(v[j])'''
+                v[k] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+                v[k] = acti(v[k])
+                k+=1
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
         oo = no_w @ v
