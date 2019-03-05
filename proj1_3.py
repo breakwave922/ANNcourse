@@ -69,7 +69,7 @@ layero_n=10   ## # of neurons in output layer
 #plt.imshow(train13_dat[0,0:-1].reshape(img_dim,img_dim))
 
 #initialize wgt
-nh_w = np.random.normal(0, 1, (share_wgt_dim,share_wgt_dim,feature_n))   ##hidden layer feature maps
+nh_w = np.random.normal(0, 1, (feature_n,share_wgt_dim,share_wgt_dim))   ##hidden layer feature maps
 #n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
 b_h = np.random.normal(0, 1, (feature_n,)) #bias
 #b_h2 = np.random.normal(0, 1, (1,)) #bias
@@ -107,32 +107,28 @@ for k in range(epoch):
     # forward pass
         v = np.ones((feature_n,sliding_o,sliding_o))
         for j in range(feature_n):
-            convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[:,:,j],b=b_h[j],f=j)
-            '''for jup in range(sliding_o):   #scan from left to right
-                for jlr in range(sliding_o): #scan from up to down
-                    v[kk] = np.multiply(slice2D(m=img_data,start=[jup,jlr],win_d=share_wgt_dim),nh_w[:,:,j]).sum()+b_h[j]
-                    v[kk] = acti(v[k])
-                    kk+=1'''
+            convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
+        v = np.append(v.flatten(), 1)    ## append for bias
         oo = no_w @ v
         o = acti(oo)  # result of output 0&1 !!!
 
 
          ###calculating error
         if traindata[inx,-1]<3.0:
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[0,:]), 2.0)).sum()
-        else:
             err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[1,:]), 2.0)).sum()
+        else:
+            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[3,:]), 2.0)).sum()
 
         # backprop time!!! ################################
         # output layer
         delta_ow = np.zeros((layero_n, layerh_n+1))   ##last col is for bias
 
         if traindata[inx, -1] <3.0:
-            delta_1 = o - y[0, :]
-        else:
             delta_1 = o - y[1, :]
+        else:
+            delta_1 = o - y[3, :]
         delta_2 = acti(o, derive=True)
 
         for uuu in range(layero_n):
