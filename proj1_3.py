@@ -22,7 +22,16 @@ def acti(x, derive=False):
 def slice2D(m,start,win_d): #### m-matrix, start-window upper left corner cordin., win_d:window dimension
     return (m[start[0]:start[0]+win_d,start[1]:start[1]+win_d])
 
-#aa=slice2D(m=np.diag(np.ones((5,))),start=[0,1],win_d=3)
+def convimg(v,m,img_dim,share_wgt_dim,wgt,b,f):     ### only applicable to no-padding, strike=1 case
+    for jup in range(img_dim-share_wgt_dim+1):  # scan from up to down
+        for jlr in range(img_dim-share_wgt_dim+1):  # scan from left to right
+                v[f,jup,jlr] = np.multiply(m[jup:jup+share_wgt_dim,jlr:jlr+share_wgt_dim], wgt).sum() + b
+                #vv[kk] = acti(vv[k])
+                #kk += 1
+    return
+
+
+
 
 # read training/test images
 
@@ -96,14 +105,14 @@ for k in range(epoch):
         inx = inds[i]
         img_data=traindata[inx,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
     # forward pass
-        v = np.ones(layerh_n+1,)  # last one is for bias
-        kk=0   ###to record number of hidden layer output
+        v = np.ones((feature_n,sliding_o,sliding_o))
         for j in range(feature_n):
-            for jup in range(sliding_o):   #scan from left to right
+            convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[:,:,j],b=b_h[j],f=j)
+            '''for jup in range(sliding_o):   #scan from left to right
                 for jlr in range(sliding_o): #scan from up to down
                     v[kk] = np.multiply(slice2D(m=img_data,start=[jup,jlr],win_d=share_wgt_dim),nh_w[:,:,j]).sum()+b_h[j]
                     v[kk] = acti(v[k])
-                    kk+=1
+                    kk+=1'''
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
         oo = no_w @ v
