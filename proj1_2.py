@@ -10,7 +10,7 @@ import random
 import csv
 import time
 
-np.random.seed(1000)  # this is what I used to get your random numbers!!!
+np.random.seed(10000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
@@ -76,7 +76,7 @@ layero_n=2   ## # of neurons in output layer
 #plt.imshow(train13_dat[0,0:-1].reshape(img_dim,img_dim))
 
 #initialize wgt
-nh_w = np.random.normal(0, 1, (share_wgt_dim,share_wgt_dim,layerh_n))   ##hidden layer feature maps-1&2
+nh_w = np.random.normal(0, 1, (feature_n,share_wgt_dim,share_wgt_dim))   ##hidden layer feature maps-1&2
 #n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
 b_h = np.random.normal(0, 1, (feature_n,)) #bias
 #b_h2 = np.random.normal(0, 1, (1,)) #bias
@@ -93,7 +93,7 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 ###############################################
 # Epochs
 ###############################################
-traindata=train13_dat
+traindata=test13_dat
 epoch = 2000 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
@@ -115,7 +115,7 @@ for k in range(epoch):
         for j in range(feature_n):
             for jlr in range(sliding_o):   #scan from left to right
                 for jud in range(sliding_o): #scan from up to down
-                    v[kk] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+                    v[kk] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[j,:,:]).sum()+b_h[j]
                     v[kk] = acti(v[kk])
                     kk+=1
 
@@ -149,12 +149,12 @@ for k in range(epoch):
                 delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]
 
          # for hidden layer
-        delta_nh=np.zeros((img_dim,img_dim,layerh_n))
+        delta_nh=np.zeros((feature_n,img_dim,img_dim))
         delta_bh=np.zeros(layerh_n,)
-        for hh in range(layerh_n):
+        for hh in range(feature_n):
             delta_h = acti(v[hh], derive=True)
             for mm in range(layero_n):
-                delta_nh[:,:,hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
+                delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
                 delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h
 
         # update rule, so old value + eta weighted version of delta's above!
@@ -177,7 +177,7 @@ for i in range(np.size(inds)):
     # forward pass
     v = np.ones(layerh_n+1,)  # last one is for bias
     for j in range(layerh_n):
-        v[j] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+        v[j] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[j,:,:]).sum()+b_h[j]
         v[j] = acti(v[j])
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
@@ -189,7 +189,7 @@ for i in range(np.size(inds)):
 
 
 #### using final trained wgt to test
-testdata=test13_dat
+testdata=train13_dat
 inds = np.arange(np.size(testdata,0))  # array of our training indices (data point index references)
 inds = np.random.permutation(inds)
 for i in range(np.size(inds)):
@@ -198,7 +198,7 @@ for i in range(np.size(inds)):
     # forward pass
     v = np.ones(layerh_n+1,)  # last one is for bias
     for j in range(layerh_n):
-        v[j] = np.multiply(testdata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+        v[j] = np.multiply(testdata[inx,0:-1].reshape(img_dim,img_dim),nh_w[j,:,:]).sum()+b_h[j]
         v[j] = acti(v[j])
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input

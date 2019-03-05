@@ -136,12 +136,12 @@ for k in range(epoch):
                 delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]
 
          # for hidden layer
-        delta_nh=np.zeros((img_dim,img_dim,layerh_n))
+        delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
         delta_bh=np.zeros(layerh_n,)
-        for hh in range(layerh_n):
+        for hh in range(feature_n):
             delta_h = acti(v[hh], derive=True)
             for mm in range(layero_n):
-                delta_nh[:,:,hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
+                delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
                 delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h
 
         # update rule, so old value + eta weighted version of delta's above!
@@ -185,7 +185,7 @@ for i in range(np.size(inds)):
     # forward pass
     v = np.ones(layerh_n+1,)  # last one is for bias
     for j in range(layerh_n):
-        v[j] = np.multiply(testdata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
+        v[j] = np.multiply(testdata[inx,0:-1].reshape(img_dim,img_dim),nh_w[j,:,:]).sum()+b_h[j]
         v[j] = acti(v[j])
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
