@@ -110,8 +110,8 @@ for k in range(epoch):
             convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
-        v = np.append(v.flatten(), 1)    ## append for bias
-        oo = no_w @ v
+        vv = np.append(v.flatten(), 1)    ## append for bias
+        oo = no_w @ vv
         o = acti(oo)  # result of output 0&1 !!!
 
 
@@ -139,10 +139,11 @@ for k in range(epoch):
         delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
         delta_bh=np.zeros(layerh_n,)
         for hh in range(feature_n):
-            delta_h = acti(v[hh], derive=True)
-            for mm in range(layero_n):
-                delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
-                delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h
+            delta_h = acti(v[hh, :, :], derive=True)
+            for cc in range(sliding_o**2):  #per feature
+                for mm in range(layero_n):
+                    delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
+                    delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h
 
         # update rule, so old value + eta weighted version of delta's above!
         nh_w = nh_w + (-1.0) * eta * delta_nh
