@@ -128,7 +128,9 @@ for k in range(epoch):
 
         # backprop time!!! ################################
         # output layer
-        delta_ow = np.zeros((layero_n, layerh_n+1))   ##last col is for bias
+        # delta_ow = np.zeros((layero_n, layerh_n+1))   ##last col is for bias
+        delta_ow = np.zeros((layero_n, feature_n, sliding_o, sliding_o))
+        delta_ob = np.zeros((layero_n, ))
 
         if traindata[inx, -1] <3.0:
             delta_1 = o - y[1, :]
@@ -136,9 +138,13 @@ for k in range(epoch):
             delta_1 = o - y[3, :]
         delta_2 = acti(o, derive=True)
 
-        for uuu in range(layero_n):
+        '''for uuu in range(layero_n):
             for hhh in range(layerh_n+1):
-                delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]
+                delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]'''
+
+        for uuu in range(layero_n):
+            delta_ow[uuu, :,:,:] = delta_1[uuu] * delta_2[uuu] * v[:,:,:]
+            delta_ob[uuu]=delta_1[uuu] * delta_2[uuu]
 
          # for hidden layer
         '''delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
