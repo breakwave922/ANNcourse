@@ -151,7 +151,7 @@ for k in range(epoch):
          # for hidden layer
         delta_nh=np.zeros((feature_n,img_dim,img_dim))
         delta_bh=np.zeros(layerh_n,)
-        for hh in range(feature_n):
+        for hh in range(layerh_n):
             delta_h = acti(v[hh], derive=True)
             for mm in range(layero_n):
                 delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)

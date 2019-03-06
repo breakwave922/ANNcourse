@@ -140,6 +140,10 @@ for k in range(epoch):
         delta_bh=np.zeros(layerh_n,)
         for hh in range(feature_n):
             delta_h = acti(v[hh, :, :], derive=True)
+            for mm in range(layero_n):
+                for hhh in range(sliding_o**2):
+                    delta_1[mm] * delta_2[mm] * no_w[mm, hh*sliding_o+hhh]*delta_h[hh,hhh]*img_data[jup:jup+share_wgt_dim,jlr:jlr+share_wgt_dim]
+
             for cc in range(sliding_o**2):  #per feature
                 for mm in range(layero_n):
                     delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
