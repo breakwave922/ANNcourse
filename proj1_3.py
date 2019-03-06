@@ -74,8 +74,9 @@ nh_w = np.random.normal(0, 1, (feature_n,share_wgt_dim,share_wgt_dim))   ##hidde
 b_h = np.random.normal(0, 1, (feature_n,)) #bias
 #b_h2 = np.random.normal(0, 1, (1,)) #bias
 
-no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neuron1,including bias, each row of wgt is used for 1 output neuron
-
+#no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neuron1,including bias, each row of wgt is used for 1 output neuron
+no_w = np.random.normal(0, 1, (layero_n,feature_n,sliding_o,sliding_o))    ## for output layer neuron1,
+b_o = np.random.normal(0, 1, (layero_n,)) #bias--output layer
 
 # learning rate
 eta = 0.1
@@ -110,9 +111,13 @@ for k in range(epoch):
             convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
-        vv = np.append(v.flatten(), 1)    ## append for bias
-        oo = no_w @ vv
-        o = acti(oo)  # result of output 0&1 !!!
+        #vv = np.append(v.flatten(), 1)    ## append for bias
+        #oo = no_w @ vv
+        oo=np.zeros((layero_n,))
+        o=np.zeros((layero_n,))
+        for kk in range(layero_n):
+            oo[kk]=np.multiply(no_w[kk,:, :, :], v[:, :, :]).sum()+b_o(kk)
+            o = acti(oo)  # result of output 0&1 !!!
 
 
          ###calculating error
@@ -136,13 +141,19 @@ for k in range(epoch):
                 delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]
 
          # for hidden layer
-        delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
+        '''delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
         delta_bh=np.zeros(layerh_n,)
         for hh in range(feature_n):
             delta_h = acti(v[hh, :, :], derive=True)
             for mm in range(layero_n):
                 for hhh in range(sliding_o**2):
                     delta_1[mm] * delta_2[mm] * no_w[mm, hh*sliding_o+hhh]*delta_h[hh,hhh]*img_data[jup:jup+share_wgt_dim,jlr:jlr+share_wgt_dim]
+
+                np.multiply(delta_1,delta_2,no_w[:,0])
+
+            for hh in range(feature_n):
+                for mm in range(layero_n):
+               np.multiply(np.multiply(delta_1, delta_2),no_w[:,mm+sliding_o**2*hh])
 
             for cc in range(sliding_o**2):  #per feature
                 for mm in range(layero_n):
@@ -230,4 +241,4 @@ plt.annotate('3', xy=(0, 1), xytext=(0.5, 1.5),
 
 plt.show()
 
-
+'''
