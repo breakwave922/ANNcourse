@@ -116,7 +116,7 @@ for k in range(epoch):
         oo=np.zeros((layero_n,))
         o=np.zeros((layero_n,))
         for kk in range(layero_n):
-            oo[kk]=np.multiply(no_w[kk,:, :, :], v[:, :, :]).sum()+b_o(kk)
+            oo[kk]=np.multiply(no_w[kk,:, :, :], v[:, :, :]).sum()+b_o[kk]
             o = acti(oo)  # result of output 0&1 !!!
 
 
@@ -147,13 +147,25 @@ for k in range(epoch):
             delta_ob[uuu]=delta_1[uuu] * delta_2[uuu]
 
          # for hidden layer
-        '''delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
-        delta_bh=np.zeros(layerh_n,)
-        for hh in range(feature_n):
+        delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
+        delta_bh=np.zeros((feature_n,))
+
+        delta_3 = acti(v[:, :, :], derive=True)
+        for mm1 in range(feature_n):  ### loop over feature
+            for mm2 in range(layero_n): ### loop over output layer
+                delta_bh[mm1]+=delta_1[mm2]*delta_2[mm2]*np.multiply(no_w[mm2,mm1,:,:],delta_3[mm1,:,:]).sum()
+
+        for mm1 in range(feature_n):  ### loop over feature
+            for mm2 in range(layero_n): ### loop over output layer
+                for jup in range(share_wgt_dim):
+                    for jlr in range(share_wgt_dim):
+                        delta_nh[mm1,jup,jlr]+=delta_1[mm2]*delta_2[mm2]*np.multiply(np.multiply(no_w[mm2,mm1,:,:],delta_3[mm1,:,:]),img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]).sum()
+
+                '''for hh in range(feature_n):
             delta_h = acti(v[hh, :, :], derive=True)
             for mm in range(layero_n):
                 for hhh in range(sliding_o**2):
-                    delta_1[mm] * delta_2[mm] * no_w[mm, hh*sliding_o+hhh]*delta_h[hh,hhh]*img_data[jup:jup+share_wgt_dim,jlr:jlr+share_wgt_dim]
+                    delta_1[mm] * delta_2[mm] * no_w[mm, hh*sliding_o+hhh]*delta_h[hh,hhh]*img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]
 
                 np.multiply(delta_1,delta_2,no_w[:,0])
 
@@ -164,12 +176,13 @@ for k in range(epoch):
             for cc in range(sliding_o**2):  #per feature
                 for mm in range(layero_n):
                     delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
-                    delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h
+                    delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h'''
 
         # update rule, so old value + eta weighted version of delta's above!
         nh_w = nh_w + (-1.0) * eta * delta_nh
         b_h = b_h + (-1.0) * eta * delta_bh
         no_w = no_w + (-1.0) * eta * delta_ow
+        b_o = b_o + (-1.0) * eta * delta_ob
 
 # plot it
 plt.plot(err)
@@ -247,4 +260,4 @@ plt.annotate('3', xy=(0, 1), xytext=(0.5, 1.5),
 
 plt.show()
 
-'''
+
