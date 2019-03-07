@@ -10,7 +10,7 @@ import random
 import csv
 import time
 
-np.random.seed(1000)  # this is what I used to get your random numbers!!!
+np.random.seed(2000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
@@ -94,13 +94,14 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 # Epochs
 ###############################################
 traindata=test13_dat
-epoch = 2000 # how many epochs?
+epoch = 120 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
 display(f)  # display the bar!
 
 for k in range(epoch):
+    print(k)
     # init error
     err[k] = 0
 

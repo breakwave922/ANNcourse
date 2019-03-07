@@ -91,7 +91,7 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 # Epochs
 ###############################################
 traindata=train13_dat
-epoch = 20 # how many epochs?
+epoch = 120 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
@@ -125,9 +125,9 @@ for k in range(epoch):
 
          ###calculating error
         if traindata[inx,-1]<3.0:
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[1,:]), 2.0)).sum()
+            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[0,:]), 2.0)).sum()
         else:
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[3,:]), 2.0)).sum()
+            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[1,:]), 2.0)).sum()
 
         # backprop time!!! ################################
         # output layer
@@ -136,9 +136,9 @@ for k in range(epoch):
         delta_ob = np.zeros((layero_n, ))
 
         if traindata[inx, -1] <3.0:
-            delta_1 = o - y[1, :]
+            delta_1 = o - y[0, :]
         else:
-            delta_1 = o - y[3, :]
+            delta_1 = o - y[1, :]
         delta_2 = acti(o, derive=True)
 
         '''for uuu in range(layero_n):
@@ -153,10 +153,19 @@ for k in range(epoch):
         delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
         delta_bh=np.zeros((feature_n,))
 
+        backwgt=np.zeros((layero_n,feature_n,sliding_o,sliding_o))
         delta_3 = acti(v[:, :, :], derive=True)
+
+        for mmo in range(layero_n): ### loop over output layer
+            backwgt[mmo,:,:,:]=np.multiply(np.multiply(delta_1[mmo], delta_2[mmo]), no_w[mmo, :, :, :])
+
+            delta_3*np.sum(backwgt,0)
+
+
+
         for mm1 in range(feature_n):  ### loop over feature
-            for mm2 in range(layero_n): ### loop over output layer
-                delta_bh[mm1]+=delta_1[mm2]*delta_2[mm2]*np.multiply(no_w[mm2,mm1,:,:],delta_3[mm1,:,:]).sum()
+            for mm2 in range(layero_n):  ### loop over output layer
+                delta_bh[mm1] += delta_1[mm2] * delta_2[mm2] * np.multiply(no_w[mm2, mm1, :, :],delta_3[mm1, :, :]).sum()
 
         for mm1 in range(feature_n):  ### loop over feature
             for mm2 in range(layero_n): ### loop over output layer
