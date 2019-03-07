@@ -89,13 +89,14 @@ y=np.diag(np.ones((layero_n,)))
 # Epochs
 ###############################################
 traindata=train13_dat
-epoch = 50 # how many epochs?
+epoch = 20 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
-f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
-display(f)  # display the bar!
+#f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
+#display(f)  # display the bar!
 
 for k in range(epoch):
+    print(k)
     # init error
     err[k] = 0
 
@@ -109,15 +110,15 @@ for k in range(epoch):
         v = np.ones((feature_n,sliding_o,sliding_o))
         for j in range(feature_n):
             convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
-
+        v = acti(v)
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
         #vv = np.append(v.flatten(), 1)    ## append for bias
         #oo = no_w @ vv
         oo=np.zeros((layero_n,))
-        o=np.zeros((layero_n,))
+        #o=np.zeros((layero_n,))
         for kk in range(layero_n):
             oo[kk]=np.multiply(no_w[kk,:, :, :], v[:, :, :]).sum()+b_o[kk]
-            o = acti(oo)  # result of output 0&1 !!!
+        o = acti(oo)  # result of output 0&1 !!!
 
 
          ###calculating error
