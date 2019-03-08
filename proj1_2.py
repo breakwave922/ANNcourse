@@ -94,7 +94,7 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 # Epochs
 ###############################################
 traindata=test13_dat
-epoch = 120 # how many epochs?
+epoch = 1200 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)

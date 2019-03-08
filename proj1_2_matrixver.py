@@ -159,11 +159,20 @@ for k in range(epoch):
         for mmo in range(layero_n): ### loop over output layer
             backwgt[mmo,:,:,:]=np.multiply(np.multiply(delta_1[mmo], delta_2[mmo]), no_w[mmo, :, :, :])
 
-            delta_3*np.sum(backwgt,0)
+        delta_4=np.multiply(delta_3, np.sum(backwgt, 0))
 
+        '''img_input_slice=np.zeros((share_wgt_dim,share_wgt_dim))
+        for jup in range(share_wgt_dim):
+            for jlr in range(share_wgt_dim):
+                img_input_slice[jup,jlr]=img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]'''
 
+        for mmf in range(feature_n):
+            delta_bh[mmf]=np.sum(delta_4[mmf,:,:])
+            for jup in range(share_wgt_dim):
+                for jlr in range(share_wgt_dim):
+                    delta_nh[mmf,jup,jlr] = np.multiply(delta_4[mmf, :, :],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]).sum()
 
-        for mm1 in range(feature_n):  ### loop over feature
+                '''for mm1 in range(feature_n):  ### loop over feature
             for mm2 in range(layero_n):  ### loop over output layer
                 delta_bh[mm1] += delta_1[mm2] * delta_2[mm2] * np.multiply(no_w[mm2, mm1, :, :],delta_3[mm1, :, :]).sum()
 
@@ -171,7 +180,7 @@ for k in range(epoch):
             for mm2 in range(layero_n): ### loop over output layer
                 for jup in range(share_wgt_dim):
                     for jlr in range(share_wgt_dim):
-                        delta_nh[mm1,jup,jlr]+=delta_1[mm2]*delta_2[mm2]*np.multiply(np.multiply(no_w[mm2,mm1,:,:],delta_3[mm1,:,:]),img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]).sum()
+                        delta_nh[mm1,jup,jlr]+=delta_1[mm2]*delta_2[mm2]*np.multiply(np.multiply(no_w[mm2,mm1,:,:],delta_3[mm1,:,:]),img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]).sum()'''
 
                 '''for hh in range(feature_n):
             delta_h = acti(v[hh, :, :], derive=True)
