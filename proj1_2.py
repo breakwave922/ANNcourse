@@ -10,7 +10,7 @@ import random
 import csv
 import time
 
-np.random.seed(2000)  # this is what I used to get your random numbers!!!
+np.random.seed(1000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
@@ -83,6 +83,13 @@ b_h = np.random.normal(0, 1, (feature_n,)) #bias
 
 no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neuron1,including bias, each row of wgt is used for 1 output neuron
 
+no_w[0,0]=-0.29843791
+no_w[0,1]=-2.14979213
+no_w[1,0]=0.38631747
+no_w[1,1]=0.2879163
+no_w[0,2]=0.40241239
+no_w[1,2]=1.59231296
+
 
 # learning rate
 eta = 0.3
@@ -93,10 +100,11 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 ###############################################
 # Epochs
 ###############################################
-traindata=test13_dat
-epoch = 120 # how many epochs?
+traindata=train13_dat
+epoch = 1 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
+#inds=np.arange(1)
 f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
 display(f)  # display the bar!
 
@@ -106,7 +114,7 @@ for k in range(epoch):
     err[k] = 0
 
     # random shuffle of data each epoch
-    inds = np.random.permutation(inds)
+    # inds = np.random.permutation(inds)
     for i in range(np.size(inds)):
         # what index?
         inx = inds[i]
@@ -162,6 +170,7 @@ for k in range(epoch):
         nh_w = nh_w + (-1.0) * eta * delta_nh
         b_h = b_h + (-1.0) * eta * delta_bh
         no_w = no_w + (-1.0) * eta * delta_ow
+        print(err)
 
 # plot it
 plt.plot(err)
@@ -169,6 +178,7 @@ plt.ylabel('Error')
 plt.xlabel('Epoch')
 plt.title('Convergence Plot')
 plt.show()
+
 
 # run through out data, what should label be, what did we get?
 inds = np.random.permutation(inds)
@@ -207,7 +217,7 @@ for i in range(np.size(inds)):
     o = acti(oo)  # result of output 0&1 !!!
 
 
-    print("Sample " + str(i) + ": label " + str(testdata[inx,-1]) + ": got " + str(o))
+    #print("Sample " + str(i) + ": label " + str(testdata[inx,-1]) + ": got " + str(o))
     if testdata[inx,-1]<3.0:
         colors='red'
         l ='1'

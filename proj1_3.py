@@ -89,9 +89,10 @@ y=np.diag(np.ones((layero_n,)))
 # Epochs
 ###############################################
 traindata=train1_dat
-epoch = 5 # how many epochs?
+epoch = 10 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
+inds=np.arange(1)
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
 #display(f)  # display the bar!
 
@@ -104,7 +105,7 @@ for k in range(epoch):
     inds = np.random.permutation(inds)
 
     for i in range(np.size(inds)):
-        print("data:", i)
+        #print("data:", i)
         # what index?
         inx = inds[i]
         img_data=traindata[inx,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
@@ -222,7 +223,7 @@ for k in range(epoch):
         b_h = b_h + (-1.0) * eta * delta_bh
         no_w = no_w + (-1.0) * eta * delta_ow
         b_o = b_o + (-1.0) * eta * delta_ob
-        print('err',err)
+        #print('err',err)
 
 # plot it
 plt.plot(err)
