@@ -79,7 +79,7 @@ no_w = np.random.normal(0, 1, (layero_n,feature_n,sliding_o,sliding_o))    ## fo
 b_o = np.random.normal(0, 1, (layero_n,)) #bias--output layer
 
 # learning rate
-eta = 0.1
+eta = 0.3
 
 # target output
 #y=np.diag(np.ones((layero_n,)))
@@ -91,7 +91,7 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 # Epochs
 ###############################################
 traindata=train13_dat
-epoch = 120 # how many epochs?
+epoch = 320 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
@@ -175,14 +175,14 @@ for k in range(epoch):
         for mmf in range(feature_n):
             # print (mmf)
             for mmo in range(layero_n):
-                for jup in range(share_wgt_dim):
-                    for jlr in range(share_wgt_dim):
-                        for hup in range(sliding_o):
-                            for hlr in range(sliding_o):
-                                delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
+                for hup in range(sliding_o):
+                     for hlr in range(sliding_o):
+                         delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[
+                             mmf, hup, hlr]
+                         for jup in range(share_wgt_dim):
+                             for jlr in range(share_wgt_dim):
+                                 delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
                                                            delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
-                                delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[
-                                    mmf, hup, hlr]
 
 
                                 # delta_bh[mmf]+=np.sum(delta_4[mmo,mmf,:,:])

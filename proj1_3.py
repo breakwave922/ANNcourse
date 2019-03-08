@@ -88,7 +88,7 @@ y=np.diag(np.ones((layero_n,)))
 ###############################################
 # Epochs
 ###############################################
-traindata=train13_dat
+traindata=train1_dat
 epoch = 5 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
@@ -174,15 +174,16 @@ for k in range(epoch):
                 img_input_slice[jup,jlr]=img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]'''
 
         for mmf in range(feature_n):
-            #print (mmf)
+            # print (mmf)
             for mmo in range(layero_n):
-                for jup in range(share_wgt_dim):
-                    for jlr in range(share_wgt_dim):
-                        for hup in range(sliding_o):
-                            for hlr in range(sliding_o):
-                                delta_nh[mmf, jup, jlr] +=delta_1[mmo] * delta_2[mmo]*no_w[mmo, mmf, hup, hlr]*delta_3[mmf,hup,hlr]*img_data[hup+jup, hlr+jlr]
-                                delta_bh[mmf] +=delta_1[mmo] * delta_2[mmo]*no_w[mmo, mmf, hup, hlr]*delta_3[mmf,hup,hlr]
-
+                for hup in range(sliding_o):
+                     for hlr in range(sliding_o):
+                         delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[
+                             mmf, hup, hlr]
+                         for jup in range(share_wgt_dim):
+                             for jlr in range(share_wgt_dim):
+                                 delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
+                                                           delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
 
                 #delta_bh[mmf]+=np.sum(delta_4[mmo,mmf,:,:])
                 #for jup in range(share_wgt_dim):

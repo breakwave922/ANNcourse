@@ -85,7 +85,7 @@ no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neur
 
 
 # learning rate
-eta = 0.1
+eta = 0.3
 
 # target output
 y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
