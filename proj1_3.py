@@ -89,20 +89,22 @@ y=np.diag(np.ones((layero_n,)))
 # Epochs
 ###############################################
 traindata=train13_dat
-epoch = 100 # how many epochs?
+epoch = 5 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
 #display(f)  # display the bar!
 
 for k in range(epoch):
-    print(k)
+    print("epoch:",k)
     # init error
     err[k] = 0
 
     # random shuffle of data each epoch
     inds = np.random.permutation(inds)
+
     for i in range(np.size(inds)):
+        print("data:", i)
         # what index?
         inx = inds[i]
         img_data=traindata[inx,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
@@ -149,16 +151,22 @@ for k in range(epoch):
 
 
          # for hidden layer
-        backwgt = np.zeros((layero_n, feature_n, sliding_o, sliding_o))
+        #backwgt = np.zeros((layero_n, feature_n, sliding_o, sliding_o))
 
-        for mmo in range(layero_n):  ### loop over output layer
-                backwgt[mmo, :, :, :] = delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :]
+        delta_3 = acti(v[:, :, :], derive=True)
+        #delta_4=np.zeros((layero_n, feature_n, sliding_o, sliding_o))
+
+       # for mmo in range(layero_n):  ### loop over output layer
+                #backwgt[mmo, :, :, :] = delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :]
+            #delta_4[mmo, :, :, :] =  np.multiply(delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :],delta_3)
 
         delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
         delta_bh=np.zeros((feature_n,))
 
-        delta_3 = acti(v[:, :, :], derive=True)
-        delta_4=np.multiply(delta_3, np.sum(backwgt, 0))
+
+        #delta_4=np.multiply(delta_3, np.sum(backwgt, 0))
+        #for mmo in range(layero_n):
+           # delta_4[mmo, :, :, :]=np.multiply(backwgt[mmo, :, :, :],delta_3)
 
         '''img_input_slice=np.zeros((share_wgt_dim,share_wgt_dim))
         for jup in range(share_wgt_dim):
@@ -166,11 +174,21 @@ for k in range(epoch):
                 img_input_slice[jup,jlr]=img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]'''
 
         for mmf in range(feature_n):
-            delta_bh[mmf]=np.sum(delta_4[mmf,:,:])
-            for jup in range(share_wgt_dim):
-                for jlr in range(share_wgt_dim):
-                    delta_nh[mmf,jup,jlr] = np.multiply(delta_4[mmf, :, :],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]).sum()
+            #print (mmf)
+            for mmo in range(layero_n):
+                for jup in range(share_wgt_dim):
+                    for jlr in range(share_wgt_dim):
+                        for hup in range(sliding_o):
+                            for hlr in range(sliding_o):
+                                delta_nh[mmf, jup, jlr] +=delta_1[mmo] * delta_2[mmo]*no_w[mmo, mmf, hup, hlr]*delta_3[mmf,hup,hlr]*img_data[hup+jup, hlr+jlr]
+                                delta_bh[mmf] +=delta_1[mmo] * delta_2[mmo]*no_w[mmo, mmf, hup, hlr]*delta_3[mmf,hup,hlr]
 
+
+                #delta_bh[mmf]+=np.sum(delta_4[mmo,mmf,:,:])
+                #for jup in range(share_wgt_dim):
+                    #for jlr in range(share_wgt_dim):
+                        #delta_nh[mmf,jup,jlr] + = np.multiply(delta_4[mmf, :, :],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]).sum()
+                        #delta_nh[mmf, jup, jlr]+=np.sum(np.multiply(delta_4[mmo,mmf,:,:],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]))
                 '''for mm1 in range(feature_n):  ### loop over feature
             for mm2 in range(layero_n):  ### loop over output layer
                 delta_bh[mm1] += delta_1[mm2] * delta_2[mm2] * np.multiply(no_w[mm2, mm1, :, :],delta_3[mm1, :, :]).sum()
@@ -203,6 +221,7 @@ for k in range(epoch):
         b_h = b_h + (-1.0) * eta * delta_bh
         no_w = no_w + (-1.0) * eta * delta_ow
         b_o = b_o + (-1.0) * eta * delta_ob
+        print('err',err)
 
 # plot it
 plt.plot(err)
