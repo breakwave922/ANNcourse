@@ -147,16 +147,17 @@ for k in range(epoch):
             delta_ow[uuu, :,:,:] = delta_1[uuu] * delta_2[uuu] * v[:,:,:]
             delta_ob[uuu]=delta_1[uuu] * delta_2[uuu]
 
+
          # for hidden layer
+        backwgt = np.zeros((layero_n, feature_n, sliding_o, sliding_o))
+
+        for mmo in range(layero_n):  ### loop over output layer
+                backwgt[mmo, :, :, :] = delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :]
+
         delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
         delta_bh=np.zeros((feature_n,))
 
-        backwgt=np.zeros((layero_n,feature_n,sliding_o,sliding_o))
         delta_3 = acti(v[:, :, :], derive=True)
-
-        for mmo in range(layero_n): ### loop over output layer
-            backwgt[mmo,:,:,:]=np.multiply(np.multiply(delta_1[mmo], delta_2[mmo]), no_w[mmo, :, :, :])
-
         delta_4=np.multiply(delta_3, np.sum(backwgt, 0))
 
         '''img_input_slice=np.zeros((share_wgt_dim,share_wgt_dim))
