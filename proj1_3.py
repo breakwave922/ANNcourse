@@ -191,7 +191,7 @@ for k in range(epoch):
             for jlr in range(share_wgt_dim):
                 img_input_slice[jup,jlr]=img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]'''
 
-        for mmf in range(feature_n):
+        '''for mmf in range(feature_n):
             # print (mmf)
             for mmo in range(layero_n):
                 for hup in range(sliding_o):
@@ -201,7 +201,19 @@ for k in range(epoch):
                          for jup in range(share_wgt_dim):
                              for jlr in range(share_wgt_dim):
                                  delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
-                                                           delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
+                                                           delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]'''
+
+        for mmo in range(layero_n):
+            # print (mmf)
+            for mmf in range(feature_n):
+                for hup in range(sliding_o):
+                    for hlr in range(sliding_o):
+                        delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[mmf, hup, hlr]
+                        for jup in range(share_wgt_dim):
+                            for jlr in range(share_wgt_dim):
+                                delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
+
+
 
                 #delta_bh[mmf]+=np.sum(delta_4[mmo,mmf,:,:])
                 #for jup in range(share_wgt_dim):
@@ -252,71 +264,49 @@ print(err)
 
 # run through out data, what should label be, what did we get?
 inds = np.random.permutation(inds)
+# random shuffle of data each epoch
+    # inds = np.random.permutation(inds)
 for i in range(np.size(inds)):
         # what index?
-    inx = inds[i]
+     inx = inds[i]
+     img_data=traindata[inx,80,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
     # forward pass
-    v = np.ones(layerh_n+1,)  # last one is for bias
-    for j in range(layerh_n):
-        v[j] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[:,:,j]).sum()+b_h[j]
-        v[j] = acti(v[j])
-
+     v = np.ones((feature_n,sliding_o,sliding_o))
+     for j in range(feature_n):
+        convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
+     v = acti(v)
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
-    oo = no_w @ v
-    o = acti(oo)  # result of output 0&1 !!!
-
-
-    print("Sample " + str(i) + ": label " + str(traindata[inx,-1]) + ": got " + str(o))
+        #vv = np.append(v.flatten(), 1)    ## append for bias
+        #oo = no_w @ vv
+     oo=np.zeros((layero_n,))
+        #o=np.zeros((layero_n,))
+     for kk in range(layero_n):
+            oo[kk]=np.multiply(no_w[kk,:, :, :], v[:, :, :]).sum()+b_o[kk]
+     o = acti(oo)  # result of output 0&1 !!!
+     print("Sample " + str(i) + ": label " + str(traindata[inx,80,-1]) + ": got " + str(o))
 
 
 #### using final trained wgt to test
-testdata=test13_dat
+'''testdata=train13_dat
 inds = np.arange(np.size(testdata,0))  # array of our training indices (data point index references)
 inds = np.random.permutation(inds)
 for i in range(np.size(inds)):
         # what index?
-    inx = inds[i]
-    # forward pass
-    v = np.ones(layerh_n+1,)  # last one is for bias
-    for j in range(layerh_n):
-        v[j] = np.multiply(testdata[inx,0:-1].reshape(img_dim,img_dim),nh_w[j,:,:]).sum()+b_h[j]
-        v[j] = acti(v[j])
+      inx = inds[i]
+      img_data = traindata[inx, 0:-1].reshape(img_dim, img_dim)  ### convert to img matrix
+        # forward pass
+      v = np.ones((feature_n, sliding_o, sliding_o))
+      for j in range(feature_n):
+            convimg(v, m=img_data, img_dim=img_dim, share_wgt_dim=share_wgt_dim, wgt=nh_w[j, :, :], b=b_h[j], f=j)
+      v = acti(v)
+        # oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
+        # vv = np.append(v.flatten(), 1)    ## append for bias
+        # oo = no_w @ vv
+      oo = np.zeros((layero_n,))
+        # o=np.zeros((layero_n,))
+      for kk in range(layero_n):
+          oo[kk] = np.multiply(no_w[kk, :, :, :], v[:, :, :]).sum() + b_o[kk]
+      o = acti(oo)  # result of output 0&1 !!!'''
 
-        #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
-    oo = no_w @ v
-    o = acti(oo)  # result of output 0&1 !!!
-
-
-    print("Sample " + str(i) + ": label " + str(testdata[inx,-1]) + ": got " + str(o))
-    if testdata[inx,-1]<3.0:
-        colors='red'
-        l ='1'
-        target1=plt.scatter(o[0], o[1], c=colors, alpha=0.5)
-    else:
-        colors = 'blue'
-        l = '3'
-        target3=plt.scatter(o[0], o[1], c=colors, alpha=0.5)
-
-plt.legend((target1, target3),
-           ('target1', 'target3'),
-           scatterpoints=1,
-           loc='upper right',
-           ncol=3,
-           fontsize=8)
-xvec = np.linspace(-2.,2.,100)
-plt.axhline(0, color='black')
-plt.axvline(0, color='black')
-plt.legend()
-plt.xlim(-2,  2)
-plt.ylim(-2, 2)
-
-plt.annotate('1', xy=(1, 0), xytext=(1.5, 0.5),
-            arrowprops=dict(facecolor='red', shrink=0.05),
-            )
-plt.annotate('3', xy=(0, 1), xytext=(0.5, 1.5),
-            arrowprops=dict(facecolor='blue', shrink=0.05),
-            )
-
-plt.show()
 
 
