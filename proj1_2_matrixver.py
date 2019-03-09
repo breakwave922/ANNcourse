@@ -102,10 +102,11 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 # Epochs
 ###############################################
 traindata=train13_dat
-epoch = 500 # how many epochs?
+epoch = 100 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
-inds=np.arange(1)
+#inds=np.arange(1)
+inds=np.array([0])
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
 #display(f)  # display the bar!
 
@@ -156,7 +157,7 @@ for k in range(epoch):
         '''for uuu in range(layero_n):
             for hhh in range(layerh_n+1):
                 delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]'''
-
+        print(delta_1,delta_2)
         for uuu in range(layero_n):
             delta_ow[uuu, :, :, :] = delta_1[uuu] * delta_2[uuu] * v[:, :, :]
             delta_ob[uuu] = delta_1[uuu] * delta_2[uuu]
@@ -189,11 +190,11 @@ for k in range(epoch):
             for mmo in range(layero_n):
                 for hup in range(sliding_o):
                      for hlr in range(sliding_o):
-                         delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[
+                         delta_bh[mmf] = delta_bh[mmf]+delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[
                              mmf, hup, hlr]
                          for jup in range(share_wgt_dim):
                              for jlr in range(share_wgt_dim):
-                                 delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
+                                 delta_nh[mmf, jup, jlr] = delta_nh[mmf, jup, jlr]+delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
                                                            delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
 
 
@@ -244,7 +245,7 @@ plt.ylabel('Error')
 plt.xlabel('Epoch')
 plt.title('Convergence Plot')
 plt.show()
-print(err)
+#print(err)
 
 # run through out data, what should label be, what did we get?
 '''inds = np.random.permutation(inds)
