@@ -19,6 +19,11 @@ def acti(x, derive=False):
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
 
+'''def acti(x, derive=False):
+    if derive:
+        return 1 * (x * (1 - x))
+    return 1 / (1 + np.exp(-x))'''
+
 def slice2D(m,start,win_d): #### m-matrix, start-window upper left corner cordin., win_d:window dimension
     return (m[start[0]:start[0]+win_d,start[1]:start[1]+win_d])
 
@@ -60,7 +65,7 @@ test13_dat=np.concatenate((test1_dat,test3_dat),axis=0)  ##merge two data
 
 #define several dimension para
 img_dim=28   ##image dim
-share_wgt_dim=28 ## share wgt dim
+share_wgt_dim=27 ## share wgt dim
 feature_n=2    ## feature map number
 sliding_o=img_dim-share_wgt_dim+1  ## sliding output size
 layerh_n=sliding_o**2*feature_n   ## #of neurons in hidden layer
@@ -97,7 +102,7 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 # Epochs
 ###############################################
 traindata=train13_dat
-epoch = 100 # how many epochs?
+epoch = 500 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 inds=np.arange(1)

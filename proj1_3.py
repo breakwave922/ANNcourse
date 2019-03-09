@@ -19,8 +19,14 @@ def acti(x, derive=False):
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
 
-def slice2D(m,start,win_d): #### m-matrix, start-window upper left corner cordin., win_d:window dimension
-    return (m[start[0]:start[0]+win_d,start[1]:start[1]+win_d])
+'''def acti(x, derive=False):
+    if derive:
+        return 1 * (x * (1 - x))
+    return 1 / (1 + np.exp(-x))'''
+
+
+'''def slice2D(m,start,win_d): #### m-matrix, start-window upper left corner cordin., win_d:window dimension
+    return (m[start[0]:start[0]+win_d,start[1]:start[1]+win_d])'''
 
 def convimg(v,m,img_dim,share_wgt_dim,wgt,b,f):     ### only applicable to no-padding, strike=1 case
     for jup in range(img_dim-share_wgt_dim+1):  # scan from up to down
@@ -30,34 +36,6 @@ def convimg(v,m,img_dim,share_wgt_dim,wgt,b,f):     ### only applicable to no-pa
                 #kk += 1
     return
 
-
-
-
-# read training/test images
-
-train1_fname='./Part2_dat/Part2_1_Train.csv'
-train3_fname='./Part2_dat/Part2_3_Train.csv'
-
-train1_dat = np.genfromtxt(train1_fname, delimiter=',')
-train3_dat = np.genfromtxt(train3_fname, delimiter=',')
-
-test1_fname='./Part2_dat/Part2_1_Test.csv'
-test3_fname='./Part2_dat/Part2_3_Test.csv'
-
-test1_dat = np.genfromtxt(test1_fname, delimiter=',')
-test3_dat = np.genfromtxt(test3_fname, delimiter=',')
-
-###last column is the right value that img represents
-train1_dat=np.append(train1_dat,np.ones((train1_dat.shape[0],1)),axis=1)
-train3_dat=np.append(train3_dat,3*np.ones((train3_dat.shape[0],1)),axis=1)
-train13_dat=np.concatenate((train1_dat,train3_dat),axis=0)  ##merge two data
-
-test1_dat=np.append(test1_dat,np.ones((test1_dat.shape[0],1)),axis=1)
-test3_dat=np.append(test3_dat,3*np.ones((test3_dat.shape[0],1)),axis=1)
-test13_dat=np.concatenate((test1_dat,test3_dat),axis=0)  ##merge two data
-
-
-
 #define several dimension para
 img_dim=28   ##image dim
 share_wgt_dim=7 ## share wgt dim
@@ -65,6 +43,40 @@ feature_n=16    ## feature map number
 sliding_o=img_dim-share_wgt_dim+1  ## sliding output size
 layerh_n=sliding_o**2*feature_n   ## #of neurons in hidden layer
 layero_n=10   ## # of neurons in output layer
+
+
+# read training/test images
+train_name=[]
+train_dat=np.zeros(shape=(10,500,img_dim**2+1))  ##last column is for values
+for i in range(10):
+    train_dat_temp=np.genfromtxt('./Part3_dat/Part3_'+str(i)+'_Train.csv', delimiter=',')
+    train_dat[i, :, :]=np.append(train_dat_temp,i*np.ones((train_dat.shape[1],1)),axis=1)
+
+#train0_fname='./Part3_dat/Part3_1_Train.csv'
+#train3_fname='./Part3_dat/Part3_3_Train.csv'
+
+
+#train1_dat = np.genfromtxt(train1_fname, delimiter=',')
+#train3_dat = np.genfromtxt(train3_fname, delimiter=',')
+
+#test1_fname='./Part2_dat/Part2_1_Test.csv'
+#test3_fname='./Part2_dat/Part2_3_Test.csv'
+
+#test1_dat = np.genfromtxt(test1_fname, delimiter=',')
+#test3_dat = np.genfromtxt(test3_fname, delimiter=',')
+
+###last column is the right value that img represents
+#train1_dat=np.append(train1_dat,np.ones((train1_dat.shape[0],1)),axis=1)
+#train3_dat=np.append(train3_dat,3*np.ones((train3_dat.shape[0],1)),axis=1)
+#train13_dat=np.concatenate((train1_dat,train3_dat),axis=0)  ##merge two data
+
+#test1_dat=np.append(test1_dat,np.ones((test1_dat.shape[0],1)),axis=1)
+#test3_dat=np.append(test3_dat,3*np.ones((test3_dat.shape[0],1)),axis=1)
+#test13_dat=np.concatenate((test1_dat,test3_dat),axis=0)  ##merge two data
+
+
+
+
 #imagesc( reshape(Matrix1_Test(:,1),[28 28]) )
 #plt.imshow(train13_dat[0,0:-1].reshape(img_dim,img_dim))
 
@@ -88,11 +100,11 @@ y=np.diag(np.ones((layero_n,)))
 ###############################################
 # Epochs
 ###############################################
-traindata=train1_dat
-epoch = 10 # how many epochs?
+traindata=train_dat
+epoch = 8 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
-inds=np.arange(1)
+#inds=np.arange(1)
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
 #display(f)  # display the bar!
 
@@ -108,7 +120,7 @@ for k in range(epoch):
         #print("data:", i)
         # what index?
         inx = inds[i]
-        img_data=traindata[inx,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
+        img_data=traindata[inx,80,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
     # forward pass
         v = np.ones((feature_n,sliding_o,sliding_o))
         for j in range(feature_n):
@@ -125,10 +137,12 @@ for k in range(epoch):
 
 
          ###calculating error
-        if traindata[inx,-1]<3.0:
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[0,:]), 2.0)).sum()
-        else:
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[1,:]), 2.0)).sum()
+        err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx,:]), 2.0)).sum()
+
+            #err[k] = err[k] + (np.multiply(1-o,np.log(1-y[0,:]))-np.multiply(o,np.log(y[0,:]))).sum()
+        #else:
+            #err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[1,:]), 2.0)).sum()
+            #err[k] = err[k] + (np.multiply(1 - o, np.log(1 - y[1, :])) - np.multiply(o, np.log(y[0, :]))).sum()
 
         # backprop time!!! ################################
         # output layer
@@ -136,10 +150,12 @@ for k in range(epoch):
         delta_ow = np.zeros((layero_n, feature_n, sliding_o, sliding_o))
         delta_ob = np.zeros((layero_n, ))
 
-        if traindata[inx, -1] <3.0:
-            delta_1 = o - y[0, :]
-        else:
-            delta_1 = o - y[1, :]
+        #if traindata[inx, -1] <3.0:
+            #delta_1 = o - y[0, :]
+       # else:
+            #delta_1 = o - y[1, :]
+        delta_1 = o - y[inx, :]
+
         delta_2 = acti(o, derive=True)
 
         '''for uuu in range(layero_n):
@@ -231,6 +247,7 @@ plt.ylabel('Error')
 plt.xlabel('Epoch')
 plt.title('Convergence Plot')
 plt.show()
+print(err)
 
 # run through out data, what should label be, what did we get?
 inds = np.random.permutation(inds)
