@@ -109,15 +109,15 @@ for k in range(epoch):
             convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
         v = acti(v)
 
-        h2=np.ones((layerh_n2+1,))   ###including bias
+        vh2=np.ones((layerh_n2+1,))   ###including bias
 
         ###from first hidden to sec hidden
         for sss in range(layerh_n2):
-            h2[sss] = np.dot(nh2_w[sss,:,:].flatten(), v.flatten()) + b_h2[sss]  ### or np.multiply(nh2_w[sss,:,:], v).sum()+ b_h2[sss]
-            h2[sss] = acti(h2[sss])
+            vh2[sss] = np.dot(nh2_w[sss,:,:].flatten(), v.flatten()) + b_h2[sss]  ### or np.multiply(nh2_w[sss,:,:], v).sum()+ b_h2[sss]
+            vh2[sss] = acti(vh2[sss])
 
         ###output layer
-        oo = no_w @ h2
+        oo = no_w @ vh2
         o = acti(oo)  # result of output 0&1 !!!
 
         ###calculating error
@@ -140,15 +140,23 @@ for k in range(epoch):
         '''for uuu in range(layero_n):
             for hhh in range(layerh_n+1):
                 delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]'''
-        delta_ow=np.array([np.multiply(delta_1,delta_2)]).T@np.array([h2])   ###including bias
+        delta_ow=np.array([np.multiply(delta_1,delta_2)]).T@np.array([vh2])   ###including bias(the last col on each row)
 
          # for wgt from hidden layer 1-hidden layer2
 
         delta_3=np.multiply(no_w.T,np.multiply(delta_1, delta_2)).sum(axis=1)
 
-        delta_4 = acti(h2, derive=True)
+        delta_4 = acti(vh2, derive=True)
 
-        delta_h2=delta_3*delta_4    ###for wgt from hideen 1-hidden layer2
+        delta_h2=np.multiply(delta_3,delta_4)    ###for wgt from hideen 1-hidden layer2
+
+        delta_hw2=(np.array([delta_h2[:-1]]).T*np.array([v.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o)      ###for wgt from h1 to h2 (excluding bias)
+
+         ### for last layer
+
+        delta_h0 = acti(v[:, :, :], derive=True)
+
+        delta_hw=(np.array([delta_h2[:-1]]).T*np.array([nh_w.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o) # need to sum up to 16*22*22 dim
 
         #delta_4=np.zeros((layero_n, feature_n, sliding_o, sliding_o))
 
