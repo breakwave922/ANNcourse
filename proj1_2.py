@@ -10,7 +10,7 @@ import random
 import csv
 import time
 
-np.random.seed(1000)  # this is what I used to get your random numbers!!!
+np.random.seed(2001)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
@@ -18,6 +18,11 @@ def acti(x, derive=False):
     if derive:
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
+
+'''def acti(x, derive=False):
+    if derive:
+        return 1 * (x * (1 - x))
+    return 1 / (1 + np.exp(-x))'''
 
 # read training/test images
 
@@ -83,16 +88,16 @@ b_h = np.random.normal(0, 1, (feature_n,)) #bias
 
 no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neuron1,including bias, each row of wgt is used for 1 output neuron
 
-no_w[0,0]=-0.29843791
+'''no_w[0,0]=-0.29843791
 no_w[0,1]=-2.14979213
 no_w[1,0]=0.38631747
 no_w[1,1]=0.2879163
 no_w[0,2]=0.40241239
-no_w[1,2]=1.59231296
+no_w[1,2]=1.59231296'''
 
 
 # learning rate
-eta = 0.3
+eta = 0.2
 
 # target output
 y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
@@ -100,8 +105,8 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 ###############################################
 # Epochs
 ###############################################
-traindata=train13_dat
-epoch = 1 # how many epochs?
+traindata=test13_dat
+epoch = 1000 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 #inds=np.arange(1)
@@ -114,7 +119,7 @@ for k in range(epoch):
     err[k] = 0
 
     # random shuffle of data each epoch
-    # inds = np.random.permutation(inds)
+    inds = np.random.permutation(inds)
     for i in range(np.size(inds)):
         # what index?
         inx = inds[i]
@@ -122,20 +127,20 @@ for k in range(epoch):
         v = np.ones(layerh_n+1,)  # last one is for bias
         kk=0   ###to record number of hidden layer output
         for j in range(feature_n):
-            for jlr in range(sliding_o):   #scan from left to right
-                for jud in range(sliding_o): #scan from up to down
-                    v[kk] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[j,:,:]).sum()+b_h[j]
-                    v[kk] = acti(v[kk])
-                    kk+=1
+            #for jlr in range(sliding_o):   #scan from left to right
+                #for jud in range(sliding_o): #scan from up to down
+                v[kk] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim),nh_w[j,:,:]).sum()+b_h[j]
+                v[kk] = acti(v[kk])
+                kk+=1
 
-            ''' for j in range(layerh_n):
+        ''' for j in range(layerh_n):
          v[j] = np.multiply(traindata[inx, 0:-1].reshape(img_dim, img_dim), nh_w[:, :, j]).sum() + b_h[j]
          v[j] = acti(v[j])'''
 
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
         oo = no_w @ v
         o = acti(oo)  # result of output 0&1 !!!
-
+        #print("output:", o)
 
          ###calculating error
         if traindata[inx,-1]<3.0:
@@ -170,7 +175,7 @@ for k in range(epoch):
         nh_w = nh_w + (-1.0) * eta * delta_nh
         b_h = b_h + (-1.0) * eta * delta_bh
         no_w = no_w + (-1.0) * eta * delta_ow
-        print(err)
+        #print(err)
 
 # plot it
 plt.plot(err)
@@ -217,7 +222,7 @@ for i in range(np.size(inds)):
     o = acti(oo)  # result of output 0&1 !!!
 
 
-    #print("Sample " + str(i) + ": label " + str(testdata[inx,-1]) + ": got " + str(o))
+    print("Sample " + str(i) + ": label " + str(testdata[inx,-1]) + ": got " + str(o))
     if testdata[inx,-1]<3.0:
         colors='red'
         l ='1'

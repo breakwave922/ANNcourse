@@ -19,10 +19,10 @@ np.random.seed(3000)  # this is what I used to get your random numbers!!!
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))'''
 
-def acti(x, derive=False):
+def acti(x, lamda=0.05, derive=False):
     if derive:
-        return 1 * (x * (1 - x))
-    return 1 / (1 + np.exp(-x))
+        return lamda * (x * (1 - x))
+    return 1 / (1 + np.exp(-lamda*x))
 
 '''def slice2D(m,start,win_d): #### m-matrix, start-window upper left corner cordin., win_d:window dimension
     return (m[start[0]:start[0]+win_d,start[1]:start[1]+win_d])'''
@@ -65,7 +65,7 @@ test13_dat=np.concatenate((test1_dat,test3_dat),axis=0)  ##merge two data
 
 #define several dimension para
 img_dim=28   ##image dim
-share_wgt_dim=7 ## share wgt dim
+share_wgt_dim=19 ## share wgt dim
 feature_n=2    ## feature map number
 sliding_o=img_dim-share_wgt_dim+1  ## sliding output size
 layerh_n=sliding_o**2*feature_n   ## #of neurons in hidden layer
@@ -90,7 +90,7 @@ b_o[0]=0.40241239
 b_o[1]=1.59231296
 
 # learning rate
-eta = 0.3
+eta = 2
 
 # target output
 #y=np.diag(np.ones((layero_n,)))
@@ -102,10 +102,10 @@ y=np.array([[1,0],[0,1]])  ##first/sec row corrsponds to class1&2
 # Epochs
 ###############################################
 traindata=train13_dat
-epoch = 100 # how many epochs?
+epoch = 300 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
-inds=np.arange(1)
+inds=[25]
 #inds=np.array([0])
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
 #display(f)  # display the bar!
@@ -122,17 +122,17 @@ for k in range(epoch):
         inx = inds[i]
         img_data=traindata[inx,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
     # forward pass
-        #v = np.ones((feature_n,sliding_o,sliding_o))
-        v = np.ones((feature_n*sliding_o*sliding_o,1))
+        v = np.ones((feature_n,sliding_o,sliding_o))
+        #v = np.ones((feature_n*sliding_o*sliding_o,1))
         kk=0
         for j in range(feature_n):
-            #convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
-            for jup in range(img_dim - share_wgt_dim + 1):  # scan from up to down
+            convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
+            '''for jup in range(img_dim - share_wgt_dim + 1):  # scan from up to down
                 for jlr in range(img_dim - share_wgt_dim + 1):  # scan from left to right
                     v[kk] = np.multiply(traindata[inx,0:-1].reshape(img_dim,img_dim)[jup:jup+share_wgt_dim,jlr:jlr+share_wgt_dim],nh_w[j,:,:]).sum()+b_h[j]
-                    #v[kk] = acti(v[kk])
-                    kk+=1
-        v=v.reshape(feature_n,sliding_o,sliding_o)
+                    v[kk] = acti(v[kk])
+                    kk+=1'''
+        #v=v.reshape(feature_n,sliding_o,sliding_o)
         v = acti(v)
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
         #vv = np.append(v.flatten(), 1)    ## append for bias
@@ -214,7 +214,6 @@ plt.show()
 
 # run through out data, what should label be, what did we get?
 #inds = np.random.permutation(inds)
-inds=np.arange(1)
 # random shuffle of data each epoch
     # inds = np.random.permutation(inds)
 for i in range(np.size(inds)):
@@ -222,19 +221,10 @@ for i in range(np.size(inds)):
      inx = inds[i]
      img_data=traindata[inx,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
     # forward pass
-        # v = np.ones((feature_n,sliding_o,sliding_o))
-     v = np.ones((feature_n * sliding_o * sliding_o, 1))
-     kk = 0
+     v = np.ones((feature_n,sliding_o,sliding_o))
      for j in range(feature_n):
-            # convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
-         for jup in range(img_dim - share_wgt_dim + 1):  # scan from up to down
-             for jlr in range(img_dim - share_wgt_dim + 1):  # scan from left to right
-                 v[kk] = np.multiply(traindata[inx, 0:-1].reshape(img_dim, img_dim)[jup:jup + share_wgt_dim,
-                                        jlr:jlr + share_wgt_dim], nh_w[j, :, :]).sum() + b_h[j]
-                 v[kk] = acti(v[kk])
-                 kk += 1
-     v = v.reshape(feature_n, sliding_o, sliding_o)
-        #v = acti(v)
+         convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
+     v = acti(v)
         #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
         #vv = np.append(v.flatten(), 1)    ## append for bias
         #oo = no_w @ vv
