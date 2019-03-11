@@ -109,15 +109,15 @@ for k in range(epoch):
             convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
         v = acti(v)
 
-        h1=np.ones((layerh_n2+1,))   ###including bias
+        h2=np.ones((layerh_n2+1,))   ###including bias
 
         ###from first hidden to sec hidden
         for sss in range(layerh_n2):
-            h1[sss] = np.dot(nh2_w[sss,:,:].flatten(), v.flatten()) + b_h2[sss]  ### or np.multiply(nh2_w[sss,:,:], v.flatten()).sum()++ b_o[sss]
-            h1[sss] = acti(h1[sss])
+            h2[sss] = np.dot(nh2_w[sss,:,:].flatten(), v.flatten()) + b_h2[sss]  ### or np.multiply(nh2_w[sss,:,:], v).sum()+ b_h2[sss]
+            h2[sss] = acti(h2[sss])
 
         ###output layer
-        oo = h1 @ no_w
+        oo = no_w @ h2
         o = acti(oo)  # result of output 0&1 !!!
 
         ###calculating error
@@ -140,16 +140,16 @@ for k in range(epoch):
         '''for uuu in range(layero_n):
             for hhh in range(layerh_n+1):
                 delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]'''
+        delta_ow=np.array([np.multiply(delta_1,delta_2)]).T@np.array([h2])   ###including bias
 
-        for uuu in range(layero_n):
-            delta_ow[uuu, :,:,:] = delta_1[uuu] * delta_2[uuu] * v[:,:,:]
-            delta_ob[uuu]=delta_1[uuu] * delta_2[uuu]
+         # for wgt from hidden layer 1-hidden layer2
 
+        delta_3=np.multiply(no_w.T,np.multiply(delta_1, delta_2)).sum(axis=1)
 
-         # for hidden layer
-        #backwgt = np.zeros((layero_n, feature_n, sliding_o, sliding_o))
+        delta_4 = acti(h2, derive=True)
 
-        delta_3 = acti(v[:, :, :], derive=True)
+        delta_h2=delta_3*delta_4    ###for wgt from hideen 1-hidden layer2
+
         #delta_4=np.zeros((layero_n, feature_n, sliding_o, sliding_o))
 
        # for mmo in range(layero_n):  ### loop over output layer
