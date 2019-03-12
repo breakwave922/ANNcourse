@@ -46,6 +46,11 @@ layerh_n2=128   ###second hidden layer
 layero_n=10   ## # of neurons in output layer
 
 
+'''pixesdiv=np.zeros((share_wgt_dim,share_wgt_dim,sliding_o,sliding_o))
+for jup in range(share_wgt_dim):
+    for jlr in range(share_wgt_dim):
+        pixesdiv[jup, jlr,:,:]=np.meshgrid(range(jup,jup+sliding_o),range(jlr,jlr+sliding_o))'''
+
 # read training/test images
 train_name=[]
 train_dat=np.zeros(shape=(10,500,img_dim**2+1))  ##last column is for values
@@ -149,9 +154,18 @@ for k in range(epoch):
 
         delta_5 = acti(v[:, :, :], derive=True)
 
-        delta_h1=np.multiply(delta_h2,delta_4)
+        #delta_h1=np.multiply(delta_h2[:-1],nh2_w)
+        delta_h1=np.zeros((layerh_n2,feature_n,sliding_o,sliding_o))
+        for lll in range(layerh_n2):
+            delta_h1[lll,:,:,:]=delta_h2[lll]*nh2_w[lll,:,:,:]
+        delta_h1=delta_h1.sum(axis=0)
 
-        delta_hw1=(np.array([delta_h2[:-1]]).T*np.array([nh_w.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o) # need to sum up to 16*22*22 dim
+        delta_hw1=delta_h1*delta_5
+
+        for fff in range(feature_n):
+            delta_hw1(mmm,:,:)###imgpixvalue in ranges imag(updownleftright) (feature_n,share_wgt_dim,share_wgt_dim)
+
+        #delta_hw1=(np.array([delta_h2[:-1]]).T*np.array([nh_w.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o) # need to sum up to 16*22*22 dim
 
         #delta_4=np.zeros((layero_n, feature_n, sliding_o, sliding_o))
 
