@@ -19,7 +19,7 @@ np.random.seed(3000)  # this is what I used to get your random numbers!!!
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))'''
 
-def acti(x, lamda=0.05, derive=False):
+def acti(x, lamda=1, derive=False):
     if derive:
         return lamda * (x * (1 - x))
     return 1 / (1 + np.exp(-lamda*x))
@@ -72,7 +72,7 @@ for i in range(10):
     train_dat[i, :, :]=np.append(train_dat_temp,i*np.ones((train_dat.shape[1],1)),axis=1)
 
 #initialize wgt
-wgt_width=0.05
+wgt_width=1
 nh_w = np.random.normal(0, wgt_width, (feature_n,share_wgt_dim,share_wgt_dim))   ##hidden layer feature maps
 #n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
 b_h = np.random.normal(0, wgt_width, (feature_n,)) #bias
@@ -98,7 +98,7 @@ y[0]=0
 # Epochs
 ###############################################
 traindata=train_dat
-epoch =10 # how many epochs?
+epoch =100 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 #inds=np.arange(1)
@@ -121,8 +121,6 @@ for k in range(epoch):
         img_data=traindata[inx,80,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
     # forward pass
         v = np.ones((feature_n,sliding_o,sliding_o))
-
-        kk=0
         for j in range(feature_n):
             convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
         v = acti(v)
@@ -131,7 +129,7 @@ for k in range(epoch):
 
         ###from first hidden to sec hidden
         for sss in range(layerh_n2):
-            vh2[sss] = np.dot(nh2_w[sss,:,:].flatten(), v.flatten()) + b_h2[sss]  ### or np.multiply(nh2_w[sss,:,:], v).sum()+ b_h2[sss]
+            vh2[sss] = np.dot(nh2_w[sss,:,:,:].flatten(), v.flatten()) + b_h2[sss]  ### or np.multiply(nh2_w[sss,:,:], v).sum()+ b_h2[sss]
             vh2[sss] = acti(vh2[sss])
 
         ###output layer
@@ -149,18 +147,18 @@ for k in range(epoch):
         delta_2 = acti(o, derive=True)
         #print('delta2',delta_2)
 
-        ### for wgr from h2-output layer
+        # this is the wgt update for for wgt from h2-output layer
         delta_ow=np.array([np.multiply(delta_1,delta_2)]).T@np.array([vh2])   ###including bias(the last col on each row)
 
-         # for wgt from hidden layer 1-hidden layer2
+         ### for wgt from hidden layer 1-hidden layer2
 
-        delta_3=np.multiply(no_w.T,np.multiply(delta_1, delta_2)).sum(axis=1)
+        delta_3=np.multiply(no_w[:,:-1].T,np.multiply(delta_1, delta_2)).sum(axis=1)
 
-        delta_4 = acti(vh2, derive=True)
+        delta_4 = acti(vh2[:-1], derive=True)
 
-        delta_h2=np.multiply(delta_3,delta_4)    ###for wgt from hideen 1-hidden layer2
+        delta_h2=np.multiply(delta_3,delta_4)    ###for bias on hidden layer 2
 
-        delta_hw2=(np.array([delta_h2[:-1]]).T*np.array([v.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o)      ###for wgt from h1 to h2 (excluding bias)
+        delta_hw2=(np.array([delta_h2]).T*np.array([v.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o)      ###for wgt from h1 to h2 (excluding bias)
 
 
          ### for last layer
@@ -174,14 +172,14 @@ for k in range(epoch):
         delta_h1=delta_h1.sum(axis=0)
 
         delta_hw1=delta_h1*delta_5
-
+        delta_bh=(delta_hw1.sum(axis=2)).sum(axis=1)   ###for share-bias update
          ## finding img input for each share wgt
         imginput=np.zeros((share_wgt_dim,share_wgt_dim,sliding_o,sliding_o))
         sharewgt_imginput(imginput,m=img_data,share_wgt_dim=share_wgt_dim,sliding_o=sliding_o)
 
         delta_nh=np.zeros((feature_n, share_wgt_dim, share_wgt_dim, sliding_o, sliding_o))
         for fff in range(feature_n):
-            delta_nh[fff,:,:,:,:]=delta_hw1[fff,:,:]*imginput###imgpixvalue in ranges imag(updownleftright) (feature_n,share_wgt_dim,share_wgt_dim)
+            delta_nh[fff,:,:,:,:]=delta_hw1[fff,:,:]*imginput ###imgpixvalue in ranges imag(updownleftright) (feature_n,share_wgt_dim,share_wgt_dim)
         delta_nh=(delta_nh.sum(axis=4)).sum(axis=3)    ### sum up on the last two dimeison, to have delta wgt for share wgt
 
 
@@ -245,7 +243,7 @@ for k in range(epoch):
                     for jlr in range(share_wgt_dim):
                         delta_nh[mm1,jup,jlr]+=delta_1[mm2]*delta_2[mm2]*np.multiply(np.multiply(no_w[mm2,mm1,:,:],delta_3[mm1,:,:]),img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]).sum()'''
 
-                '''for hh in range(feature_n):
+        '''for hh in range(feature_n):
             delta_h = acti(v[hh, :, :], derive=True)
             for mm in range(layero_n):
                 for hhh in range(sliding_o**2):
@@ -263,11 +261,16 @@ for k in range(epoch):
                     delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h'''
 
         # update rule, so old value + eta weighted version of delta's above!
+
+        no_w = no_w + (-1.0) * eta * delta_ow
+
+        nh2_w = nh2_w + (-1.0) * eta * delta_hw2
+        b_h2 = b_h2 +(-1.0) * eta * delta_h2  ###bias on 2nd hidden layer
+
         nh_w = nh_w + (-1.0) * eta * delta_nh
         b_h = b_h + (-1.0) * eta * delta_bh
-        no_w = no_w + (-1.0) * eta * delta_ow
-        b_o = b_o + (-1.0) * eta * delta_ob
-        print('err',err)
+
+        #print('err',err)
 
 # plot it
 plt.plot(err)
@@ -282,23 +285,28 @@ inds = np.random.permutation(inds)
 # random shuffle of data each epoch
     # inds = np.random.permutation(inds)
 for i in range(np.size(inds)):
-        # what index?
-     inx = inds[i]
-     img_data=traindata[inx,80,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
+    # print("data:", i)
+    # what index?
+    inx = inds[i]
+    img_data = traindata[inx, 80, 0:-1].reshape(img_dim, img_dim)  ### convert to img matrix
     # forward pass
-     v = np.ones((feature_n,sliding_o,sliding_o))
-     for j in range(feature_n):
-         convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
-     v = acti(v)
-        #oo = np.array([np.dot(v.T, no_w),np.dot(v, no_w2)])  # output neuron 0&1 fires, taking hidden neuron 1 and 2 as input
-        #vv = np.append(v.flatten(), 1)    ## append for bias
-        #oo = no_w @ vv
-     oo=np.zeros((layero_n,))
-        #o=np.zeros((layero_n,))
-     for kk in range(layero_n):
-            oo[kk]=np.multiply(no_w[kk,:, :, :], v[:, :, :]).sum()+b_o[kk]
-     o = acti(oo)  # result of output 0&1 !!!
-     print("Sample " + str(i) + ": label " + str(traindata[inx,80,-1]) + ": got " + str(o))
+    v = np.ones((feature_n, sliding_o, sliding_o))
+    for j in range(feature_n):
+        convimg(v, m=img_data, img_dim=img_dim, share_wgt_dim=share_wgt_dim, wgt=nh_w[j, :, :], b=b_h[j], f=j)
+    v = acti(v)
+
+    vh2 = np.ones((layerh_n2 + 1,))  ###including bias
+
+    ###from first hidden to sec hidden
+    for sss in range(layerh_n2):
+        vh2[sss] = np.dot(nh2_w[sss, :, :, :].flatten(), v.flatten()) + b_h2[
+            sss]  ### or np.multiply(nh2_w[sss,:,:], v).sum()+ b_h2[sss]
+        vh2[sss] = acti(vh2[sss])
+
+    ###output layer
+    oo = no_w @ vh2
+    o = acti(oo)  # result of output 0&1 !!!
+    print("Sample " + str(i) + ": label " + str(traindata[inx,80,-1]) + ": got " + str(o))
 
 
 #### using final trained wgt to test
