@@ -32,9 +32,12 @@ def convimg(v,m,img_dim,share_wgt_dim,wgt,b,f):     ### only applicable to no-pa
     for jup in range(img_dim-share_wgt_dim+1):  # scan from up to down
         for jlr in range(img_dim-share_wgt_dim+1):  # scan from left to right
                 v[f,jup,jlr] = np.multiply(m[jup:jup+share_wgt_dim,jlr:jlr+share_wgt_dim], wgt).sum() + b
-                #vv[kk] = acti(vv[k])
-                #kk += 1
     return
+
+def sharewgt_imginput(imginput,m,share_wgt_dim,sliding_o):
+    for jup in range(share_wgt_dim):  # scan from up to down
+        for jlr in range(share_wgt_dim):  # scan from left to right
+            imginput[jup,jlr,:,:] = (m[jup:jup+sliding_o,jlr:jlr+sliding_o])
 
 #define several dimension para
 img_dim=28   ##image dim
@@ -49,7 +52,17 @@ layero_n=10   ## # of neurons in output layer
 '''pixesdiv=np.zeros((share_wgt_dim,share_wgt_dim,sliding_o,sliding_o))
 for jup in range(share_wgt_dim):
     for jlr in range(share_wgt_dim):
-        pixesdiv[jup, jlr,:,:]=np.meshgrid(range(jup,jup+sliding_o),range(jlr,jlr+sliding_o))'''
+        #pixesdiv[jup, jlr,:,:]=np.meshgrid(range(jup,jup+sliding_o),range(jlr,jlr+sliding_o))
+        x,y=np.ogrid[jup:jup+sliding_o,jlr:jlr+sliding_o]
+        pixesdiv[jup,jlr]=x+y'''
+
+'''coordinates = np.zeros((share_wgt_dim,share_wgt_dim,sliding_o,sliding_o))
+for jup in range(share_wgt_dim):
+    for jlr in range(share_wgt_dim):
+        for x in range(sliding_o):
+            for y in range(sliding_o):
+                coordinates[jup,jlr,x,y]=np.array([x+jup,y+jlr])'''
+
 
 # read training/test images
 train_name=[]
@@ -162,8 +175,15 @@ for k in range(epoch):
 
         delta_hw1=delta_h1*delta_5
 
+         ## finding img input for each share wgt
+        imginput=np.zeros((share_wgt_dim,share_wgt_dim,sliding_o,sliding_o))
+        sharewgt_imginput(imginput,m=img_data,share_wgt_dim=share_wgt_dim,sliding_o=sliding_o)
+
+        delta_nh=np.zeros((feature_n, share_wgt_dim, share_wgt_dim, sliding_o, sliding_o))
         for fff in range(feature_n):
-            delta_hw1(mmm,:,:)###imgpixvalue in ranges imag(updownleftright) (feature_n,share_wgt_dim,share_wgt_dim)
+            delta_nh[fff,:,:,:,:]=delta_hw1[fff,:,:]*imginput###imgpixvalue in ranges imag(updownleftright) (feature_n,share_wgt_dim,share_wgt_dim)
+        delta_nh=(delta_nh.sum(axis=4)).sum(axis=3)    ### sum up on the last two dimeison, to have delta wgt for share wgt
+
 
         #delta_hw1=(np.array([delta_h2[:-1]]).T*np.array([nh_w.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o) # need to sum up to 16*22*22 dim
 
@@ -173,7 +193,7 @@ for k in range(epoch):
                 #backwgt[mmo, :, :, :] = delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :]
             #delta_4[mmo, :, :, :] =  np.multiply(delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :],delta_3)
 
-        delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
+        '''delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
         delta_bh=np.zeros((feature_n,))
 
 
@@ -181,12 +201,12 @@ for k in range(epoch):
         #for mmo in range(layero_n):
            # delta_4[mmo, :, :, :]=np.multiply(backwgt[mmo, :, :, :],delta_3)
 
-        '''img_input_slice=np.zeros((share_wgt_dim,share_wgt_dim))
+        img_input_slice=np.zeros((share_wgt_dim,share_wgt_dim))
         for jup in range(share_wgt_dim):
             for jlr in range(share_wgt_dim):
-                img_input_slice[jup,jlr]=img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]'''
+                img_input_slice[jup,jlr]=img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]
 
-        '''for mmf in range(feature_n):
+        for mmf in range(feature_n):
             # print (mmf)
             for mmo in range(layero_n):
                 for hup in range(sliding_o):
@@ -196,7 +216,7 @@ for k in range(epoch):
                          for jup in range(share_wgt_dim):
                              for jlr in range(share_wgt_dim):
                                  delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
-                                                           delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]'''
+                                                           delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
 
         for mmo in range(layero_n):
             # print (mmf)
@@ -215,7 +235,7 @@ for k in range(epoch):
                     #for jlr in range(share_wgt_dim):
                         #delta_nh[mmf,jup,jlr] + = np.multiply(delta_4[mmf, :, :],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]).sum()
                         #delta_nh[mmf, jup, jlr]+=np.sum(np.multiply(delta_4[mmo,mmf,:,:],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]))
-                '''for mm1 in range(feature_n):  ### loop over feature
+                for mm1 in range(feature_n):  ### loop over feature
             for mm2 in range(layero_n):  ### loop over output layer
                 delta_bh[mm1] += delta_1[mm2] * delta_2[mm2] * np.multiply(no_w[mm2, mm1, :, :],delta_3[mm1, :, :]).sum()
 
