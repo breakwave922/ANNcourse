@@ -125,21 +125,13 @@ for k in range(epoch):
 
         # backprop time!!! ################################
         # output layer
-        # delta_ow = np.zeros((layero_n, layerh_n+1))   ##last col is for bias
         delta_ow = np.zeros((layero_n,layerh_n2+1)) ## last term is for bias
-        #delta_ob = np.zeros((layero_n, ))
 
-        #if traindata[inx, -1] <3.0:
-            #delta_1 = o - y[0, :]
-       # else:
-            #delta_1 = o - y[1, :]
         delta_1 = o - y[inx, :]
         delta_2 = acti(o, derive=True)
         #print('delta2',delta_2)
 
-        '''for uuu in range(layero_n):
-            for hhh in range(layerh_n+1):
-                delta_ow[uuu,hhh]= delta_1[uuu]*delta_2[uuu]*v[hhh]'''
+        ### for wgr from h2-output layer
         delta_ow=np.array([np.multiply(delta_1,delta_2)]).T@np.array([vh2])   ###including bias(the last col on each row)
 
          # for wgt from hidden layer 1-hidden layer2
@@ -152,11 +144,14 @@ for k in range(epoch):
 
         delta_hw2=(np.array([delta_h2[:-1]]).T*np.array([v.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o)      ###for wgt from h1 to h2 (excluding bias)
 
+
          ### for last layer
 
-        delta_h0 = acti(v[:, :, :], derive=True)
+        delta_5 = acti(v[:, :, :], derive=True)
 
-        delta_hw=(np.array([delta_h2[:-1]]).T*np.array([nh_w.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o) # need to sum up to 16*22*22 dim
+        delta_h1=np.multiply(delta_h2,delta_4)
+
+        delta_hw1=(np.array([delta_h2[:-1]]).T*np.array([nh_w.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o) # need to sum up to 16*22*22 dim
 
         #delta_4=np.zeros((layero_n, feature_n, sliding_o, sliding_o))
 
