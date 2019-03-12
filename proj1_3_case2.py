@@ -101,6 +101,8 @@ traindata=train_dat
 epoch =100 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
+inds_dig=np.arange(np.size(traindata,1))
+img_dig=2  ###for choosing how many img per dig to train
 #inds=np.arange(1)
 #inds[0]=4
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
@@ -115,160 +117,162 @@ for k in range(epoch):
     inds = np.random.permutation(inds)
 
     for i in range(np.size(inds)):
-        #print("data:", i)
-        # what index?
-        inx = inds[i]
-        img_data=traindata[inx,80,0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
-    # forward pass
-        v = np.ones((feature_n,sliding_o,sliding_o))
-        for j in range(feature_n):
-            convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
-        v = acti(v)
+        inds_dig = np.random.permutation(inds_dig)
+        for imim in range(img_dig):
+            #print("data:", i)
+            # what index?
+            inx = inds[i]
+            img_data=traindata[inx,inds_dig[imim],0:-1].reshape(img_dim,img_dim)  ### convert to img matrix
+        # forward pass
+            v = np.ones((feature_n,sliding_o,sliding_o))
+            for j in range(feature_n):
+                convimg(v,m=img_data,img_dim=img_dim,share_wgt_dim=share_wgt_dim,wgt=nh_w[j,:,:],b=b_h[j],f=j)
+            v = acti(v)
 
-        vh2=np.ones((layerh_n2+1,))   ###including bias
+            vh2=np.ones((layerh_n2+1,))   ###including bias
 
-        ###from first hidden to sec hidden
-        for sss in range(layerh_n2):
-            vh2[sss] = np.dot(nh2_w[sss,:,:,:].flatten(), v.flatten()) + b_h2[sss]  ### or np.multiply(nh2_w[sss,:,:], v).sum()+ b_h2[sss]
-            vh2[sss] = acti(vh2[sss])
+            ###from first hidden to sec hidden
+            for sss in range(layerh_n2):
+                vh2[sss] = np.dot(nh2_w[sss,:,:,:].flatten(), v.flatten()) + b_h2[sss]  ### or np.multiply(nh2_w[sss,:,:], v).sum()+ b_h2[sss]
+                vh2[sss] = acti(vh2[sss])
 
-        ###output layer
-        oo = no_w @ vh2
-        o = acti(oo)  # result of output 0&1 !!!
+            ###output layer
+            oo = no_w @ vh2
+            o = acti(oo)  # result of output 0&1 !!!
 
-        ###calculating error
-        err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx,:]), 2.0)).sum()
+            ###calculating error
+            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx,:]), 2.0)).sum()
 
-        # backprop time!!! ################################
-        # output layer
-        delta_ow = np.zeros((layero_n,layerh_n2+1)) ## last term is for bias
+            # backprop time!!! ################################
+            # output layer
+            delta_ow = np.zeros((layero_n,layerh_n2+1)) ## last term is for bias
 
-        delta_1 = o - y[inx, :]
-        delta_2 = acti(o, derive=True)
-        #print('delta2',delta_2)
+            delta_1 = o - y[inx, :]
+            delta_2 = acti(o, derive=True)
+            #print('delta2',delta_2)
 
-        # this is the wgt update for for wgt from h2-output layer
-        delta_ow=np.array([np.multiply(delta_1,delta_2)]).T@np.array([vh2])   ###including bias(the last col on each row)
+            # this is the wgt update for for wgt from h2-output layer
+            delta_ow=np.array([np.multiply(delta_1,delta_2)]).T@np.array([vh2])   ###including bias(the last col on each row)
 
-         ### for wgt from hidden layer 1-hidden layer2
+             ### for wgt from hidden layer 1-hidden layer2
 
-        delta_3=np.multiply(no_w[:,:-1].T,np.multiply(delta_1, delta_2)).sum(axis=1)
+            delta_3=np.multiply(no_w[:,:-1].T,np.multiply(delta_1, delta_2)).sum(axis=1)
 
-        delta_4 = acti(vh2[:-1], derive=True)
+            delta_4 = acti(vh2[:-1], derive=True)
 
-        delta_h2=np.multiply(delta_3,delta_4)    ###for bias on hidden layer 2
+            delta_h2=np.multiply(delta_3,delta_4)    ###for bias on hidden layer 2
 
-        delta_hw2=(np.array([delta_h2]).T*np.array([v.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o)      ###for wgt from h1 to h2 (excluding bias)
-
-
-         ### for last layer
-
-        delta_5 = acti(v[:, :, :], derive=True)
-
-        #delta_h1=np.multiply(delta_h2[:-1],nh2_w)
-        delta_h1=np.zeros((layerh_n2,feature_n,sliding_o,sliding_o))
-        for lll in range(layerh_n2):
-            delta_h1[lll,:,:,:]=delta_h2[lll]*nh2_w[lll,:,:,:]
-        delta_h1=delta_h1.sum(axis=0)
-
-        delta_hw1=delta_h1*delta_5
-        delta_bh=(delta_hw1.sum(axis=2)).sum(axis=1)   ###for share-bias update
-         ## finding img input for each share wgt
-        imginput=np.zeros((share_wgt_dim,share_wgt_dim,sliding_o,sliding_o))
-        sharewgt_imginput(imginput,m=img_data,share_wgt_dim=share_wgt_dim,sliding_o=sliding_o)
-
-        delta_nh=np.zeros((feature_n, share_wgt_dim, share_wgt_dim, sliding_o, sliding_o))
-        for fff in range(feature_n):
-            delta_nh[fff,:,:,:,:]=delta_hw1[fff,:,:]*imginput ###imgpixvalue in ranges imag(updownleftright) (feature_n,share_wgt_dim,share_wgt_dim)
-        delta_nh=(delta_nh.sum(axis=4)).sum(axis=3)    ### sum up on the last two dimeison, to have delta wgt for share wgt
+            delta_hw2=(np.array([delta_h2]).T*np.array([v.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o)      ###for wgt from h1 to h2 (excluding bias)
 
 
-        #delta_hw1=(np.array([delta_h2[:-1]]).T*np.array([nh_w.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o) # need to sum up to 16*22*22 dim
+             ### for last layer
 
-        #delta_4=np.zeros((layero_n, feature_n, sliding_o, sliding_o))
+            delta_5 = acti(v[:, :, :], derive=True)
 
-       # for mmo in range(layero_n):  ### loop over output layer
-                #backwgt[mmo, :, :, :] = delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :]
-            #delta_4[mmo, :, :, :] =  np.multiply(delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :],delta_3)
+            #delta_h1=np.multiply(delta_h2[:-1],nh2_w)
+            delta_h1=np.zeros((layerh_n2,feature_n,sliding_o,sliding_o))
+            for lll in range(layerh_n2):
+                delta_h1[lll,:,:,:]=delta_h2[lll]*nh2_w[lll,:,:,:]
+            delta_h1=delta_h1.sum(axis=0)
 
-        '''delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
-        delta_bh=np.zeros((feature_n,))
+            delta_hw1=delta_h1*delta_5
+            delta_bh=(delta_hw1.sum(axis=2)).sum(axis=1)   ###for share-bias update
+             ## finding img input for each share wgt
+            imginput=np.zeros((share_wgt_dim,share_wgt_dim,sliding_o,sliding_o))
+            sharewgt_imginput(imginput,m=img_data,share_wgt_dim=share_wgt_dim,sliding_o=sliding_o)
+
+            delta_nh=np.zeros((feature_n, share_wgt_dim, share_wgt_dim, sliding_o, sliding_o))
+            for fff in range(feature_n):
+                delta_nh[fff,:,:,:,:]=delta_hw1[fff,:,:]*imginput ###imgpixvalue in ranges imag(updownleftright) (feature_n,share_wgt_dim,share_wgt_dim)
+            delta_nh=(delta_nh.sum(axis=4)).sum(axis=3)    ### sum up on the last two dimeison, to have delta wgt for share wgt
 
 
-        #delta_4=np.multiply(delta_3, np.sum(backwgt, 0))
-        #for mmo in range(layero_n):
-           # delta_4[mmo, :, :, :]=np.multiply(backwgt[mmo, :, :, :],delta_3)
+            #delta_hw1=(np.array([delta_h2[:-1]]).T*np.array([nh_w.flatten()])).reshape(layerh_n2,feature_n,sliding_o,sliding_o) # need to sum up to 16*22*22 dim
 
-        img_input_slice=np.zeros((share_wgt_dim,share_wgt_dim))
-        for jup in range(share_wgt_dim):
-            for jlr in range(share_wgt_dim):
-                img_input_slice[jup,jlr]=img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]
+            #delta_4=np.zeros((layero_n, feature_n, sliding_o, sliding_o))
 
-        for mmf in range(feature_n):
-            # print (mmf)
-            for mmo in range(layero_n):
-                for hup in range(sliding_o):
-                     for hlr in range(sliding_o):
-                         delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[
-                             mmf, hup, hlr]
-                         for jup in range(share_wgt_dim):
-                             for jlr in range(share_wgt_dim):
-                                 delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
-                                                           delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
+           # for mmo in range(layero_n):  ### loop over output layer
+                    #backwgt[mmo, :, :, :] = delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :]
+                #delta_4[mmo, :, :, :] =  np.multiply(delta_1[mmo] * delta_2[mmo] * no_w[mmo, :, :, :],delta_3)
 
-        for mmo in range(layero_n):
-            # print (mmf)
+            '''delta_nh=np.zeros((feature_n,share_wgt_dim,share_wgt_dim))
+            delta_bh=np.zeros((feature_n,))
+    
+    
+            #delta_4=np.multiply(delta_3, np.sum(backwgt, 0))
+            #for mmo in range(layero_n):
+               # delta_4[mmo, :, :, :]=np.multiply(backwgt[mmo, :, :, :],delta_3)
+    
+            img_input_slice=np.zeros((share_wgt_dim,share_wgt_dim))
+            for jup in range(share_wgt_dim):
+                for jlr in range(share_wgt_dim):
+                    img_input_slice[jup,jlr]=img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]
+    
             for mmf in range(feature_n):
-                for hup in range(sliding_o):
-                    for hlr in range(sliding_o):
-                        delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[mmf, hup, hlr]
-                        for jup in range(share_wgt_dim):
-                            for jlr in range(share_wgt_dim):
-                                delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
+                # print (mmf)
+                for mmo in range(layero_n):
+                    for hup in range(sliding_o):
+                         for hlr in range(sliding_o):
+                             delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[
+                                 mmf, hup, hlr]
+                             for jup in range(share_wgt_dim):
+                                 for jlr in range(share_wgt_dim):
+                                     delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * \
+                                                               delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
+    
+            for mmo in range(layero_n):
+                # print (mmf)
+                for mmf in range(feature_n):
+                    for hup in range(sliding_o):
+                        for hlr in range(sliding_o):
+                            delta_bh[mmf] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[mmf, hup, hlr]
+                            for jup in range(share_wgt_dim):
+                                for jlr in range(share_wgt_dim):
+                                    delta_nh[mmf, jup, jlr] += delta_1[mmo] * delta_2[mmo] * no_w[mmo, mmf, hup, hlr] * delta_3[mmf, hup, hlr] * img_data[hup + jup, hlr + jlr]
+    
+    
+    
+                    #delta_bh[mmf]+=np.sum(delta_4[mmo,mmf,:,:])
+                    #for jup in range(share_wgt_dim):
+                        #for jlr in range(share_wgt_dim):
+                            #delta_nh[mmf,jup,jlr] + = np.multiply(delta_4[mmf, :, :],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]).sum()
+                            #delta_nh[mmf, jup, jlr]+=np.sum(np.multiply(delta_4[mmo,mmf,:,:],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]))
+                    for mm1 in range(feature_n):  ### loop over feature
+                for mm2 in range(layero_n):  ### loop over output layer
+                    delta_bh[mm1] += delta_1[mm2] * delta_2[mm2] * np.multiply(no_w[mm2, mm1, :, :],delta_3[mm1, :, :]).sum()
+    
+            for mm1 in range(feature_n):  ### loop over feature
+                for mm2 in range(layero_n): ### loop over output layer
+                    for jup in range(share_wgt_dim):
+                        for jlr in range(share_wgt_dim):
+                            delta_nh[mm1,jup,jlr]+=delta_1[mm2]*delta_2[mm2]*np.multiply(np.multiply(no_w[mm2,mm1,:,:],delta_3[mm1,:,:]),img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]).sum()'''
 
-
-
-                #delta_bh[mmf]+=np.sum(delta_4[mmo,mmf,:,:])
-                #for jup in range(share_wgt_dim):
-                    #for jlr in range(share_wgt_dim):
-                        #delta_nh[mmf,jup,jlr] + = np.multiply(delta_4[mmf, :, :],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]).sum()
-                        #delta_nh[mmf, jup, jlr]+=np.sum(np.multiply(delta_4[mmo,mmf,:,:],img_data[jup:jup + sliding_o, jlr:jlr + sliding_o]))
-                for mm1 in range(feature_n):  ### loop over feature
-            for mm2 in range(layero_n):  ### loop over output layer
-                delta_bh[mm1] += delta_1[mm2] * delta_2[mm2] * np.multiply(no_w[mm2, mm1, :, :],delta_3[mm1, :, :]).sum()
-
-        for mm1 in range(feature_n):  ### loop over feature
-            for mm2 in range(layero_n): ### loop over output layer
-                for jup in range(share_wgt_dim):
-                    for jlr in range(share_wgt_dim):
-                        delta_nh[mm1,jup,jlr]+=delta_1[mm2]*delta_2[mm2]*np.multiply(np.multiply(no_w[mm2,mm1,:,:],delta_3[mm1,:,:]),img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]).sum()'''
-
-        '''for hh in range(feature_n):
-            delta_h = acti(v[hh, :, :], derive=True)
-            for mm in range(layero_n):
-                for hhh in range(sliding_o**2):
-                    delta_1[mm] * delta_2[mm] * no_w[mm, hh*sliding_o+hhh]*delta_h[hh,hhh]*img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]
-
-                np.multiply(delta_1,delta_2,no_w[:,0])
-
-            for hh in range(feature_n):
+            '''for hh in range(feature_n):
+                delta_h = acti(v[hh, :, :], derive=True)
                 for mm in range(layero_n):
-               np.multiply(np.multiply(delta_1, delta_2),no_w[:,mm+sliding_o**2*hh])
+                    for hhh in range(sliding_o**2):
+                        delta_1[mm] * delta_2[mm] * no_w[mm, hh*sliding_o+hhh]*delta_h[hh,hhh]*img_data[jup:jup+sliding_o,jlr:jlr+sliding_o]
+    
+                    np.multiply(delta_1,delta_2,no_w[:,0])
+    
+                for hh in range(feature_n):
+                    for mm in range(layero_n):
+                   np.multiply(np.multiply(delta_1, delta_2),no_w[:,mm+sliding_o**2*hh])
+    
+                for cc in range(sliding_o**2):  #per feature
+                    for mm in range(layero_n):
+                        delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
+                        delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h'''
 
-            for cc in range(sliding_o**2):  #per feature
-                for mm in range(layero_n):
-                    delta_nh[hh,:,:]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh] * delta_h*traindata[inx,0:-1].reshape(img_dim,img_dim)
-                    delta_bh[hh]+=delta_1[mm] * delta_2[mm] * no_w[mm,hh]* delta_h'''
+            # update rule, so old value + eta weighted version of delta's above!
 
-        # update rule, so old value + eta weighted version of delta's above!
+            no_w = no_w + (-1.0) * eta * delta_ow
 
-        no_w = no_w + (-1.0) * eta * delta_ow
+            nh2_w = nh2_w + (-1.0) * eta * delta_hw2
+            b_h2 = b_h2 +(-1.0) * eta * delta_h2  ###bias on 2nd hidden layer
 
-        nh2_w = nh2_w + (-1.0) * eta * delta_hw2
-        b_h2 = b_h2 +(-1.0) * eta * delta_h2  ###bias on 2nd hidden layer
-
-        nh_w = nh_w + (-1.0) * eta * delta_nh
-        b_h = b_h + (-1.0) * eta * delta_bh
+            nh_w = nh_w + (-1.0) * eta * delta_nh
+            b_h = b_h + (-1.0) * eta * delta_bh
 
         #print('err',err)
 
