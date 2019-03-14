@@ -14,15 +14,15 @@ np.random.seed(3000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
-def acti(x, derive=False):
+'''def acti(x, derive=False):
     if derive:
         return 1 - x*x #(np.square(x))
-    return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
+    return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))'''
 
-'''def acti(x, lamda=1, derive=False):
+def acti(x, lamda=1, derive=False):
     if derive:
         return lamda * (x * (1 - x))
-    return 1 / (1 + np.exp(-lamda*x))'''
+    return 1 / (1 + np.exp(-lamda*x))
 
 
 '''def slice2D(m,start,win_d): #### m-matrix, start-window upper left corner cordin., win_d:window dimension
@@ -88,7 +88,7 @@ no_w = np.random.normal(0, wgt_width, (layero_n,feature_n,sliding_o,sliding_o)) 
 b_o = np.random.normal(0, wgt_width, (layero_n,)) #bias--output layer
 
 # learning rate
-eta = 0.3
+eta = 1
 
 # target output
 y=np.diag(np.ones((layero_n,)))
@@ -103,7 +103,7 @@ epoch =30 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 inds_dig=np.arange(np.size(traindata,1))
-img_dig=2  ###for choosing how many img per dig to train
+img_dig=1  ###for choosing how many img per dig to train
 #inds=np.arange(1)
 #inds[0]=4
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
@@ -172,6 +172,12 @@ for k in range(epoch):
             for fff in range(feature_n):
                 delta_nh[fff,:,:,:,:]=delta_hw1[fff,:,:]*imginput ###imgpixvalue in ranges imag(updownleftright) (feature_n,share_wgt_dim,share_wgt_dim)
             delta_nh=(delta_nh.sum(axis=4)).sum(axis=3)    ### sum up on the last two dimeison, to have delta wgt for share wgt
+
+            '''delta_nh = np.zeros((feature_n, share_wgt_dim, share_wgt_dim))
+for fff in range (feature_n):
+    for jup in range(share_wgt_dim):
+        for jlr in range(share_wgt_dim):
+            delta_nh[fff, jup, jlr]  = (delta_hw1[fff, :, :] * imginput[jup,jlr,:,:]).sum()'''
 
             # update rule, so old value + eta weighted version of delta's above!
 

@@ -65,7 +65,7 @@ test13_dat=np.concatenate((test1_dat,test3_dat),axis=0)  ##merge two data
 
 #define several dimension para
 img_dim=28   ##image dim
-share_wgt_dim=7 ## share wgt dim
+share_wgt_dim=28 ## share wgt dim
 feature_n=2    ## feature map number
 sliding_o=img_dim-share_wgt_dim+1  ## sliding output size
 layerh_n=sliding_o**2*feature_n   ## #of neurons in hidden layer
