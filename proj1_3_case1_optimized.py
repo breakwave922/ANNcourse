@@ -19,7 +19,7 @@ np.random.seed(1000)  # this is what I used to get your random numbers!!!
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))'''
 
-def acti(x, lamda=0.1, derive=False, entropy=False):
+def acti(x, lamda=0.3, derive=False, entropy=False):
     if derive:
         return lamda * (x * (1 - x))
     if entropy:
@@ -90,7 +90,7 @@ no_w = np.random.normal(0, wgt_width, (layero_n,feature_n,sliding_o,sliding_o))/
 b_o = np.random.normal(0, wgt_width, (layero_n,)) #bias--output layer
 
 # learning rate
-eta = 2
+eta = 3
 
 # target output
 y=np.diag(np.ones((layero_n,)))
@@ -105,7 +105,7 @@ epoch =50 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 inds_dig=np.arange(np.size(traindata,1))
-img_dig=2  ###for choosing how many img per dig to train
+img_dig=10  ###for choosing how many img per dig to train
 #inds=np.arange(1)
 #inds[0]=4
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
