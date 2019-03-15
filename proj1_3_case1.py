@@ -82,13 +82,13 @@ for i in range(10):
 
 #initialize wgt
 wgt_width=0.05
-nh_w = np.random.normal(0, wgt_width, (feature_n,share_wgt_dim,share_wgt_dim))   ##hidden layer feature maps
+nh_w = np.random.normal(0, wgt_width, (feature_n,share_wgt_dim,share_wgt_dim))    ##hidden layer feature maps
 #n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
 b_h = np.random.normal(0, wgt_width, (feature_n,)) #bias
 #b_h2 = np.random.normal(0, 1, (1,)) #bias
 
 #no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neuron1,including bias, each row of wgt is used for 1 output neuron
-no_w = np.random.normal(0, wgt_width, (layero_n,feature_n,sliding_o,sliding_o))    ## for output layer neuron1,
+no_w = np.random.normal(0, wgt_width, (layero_n,feature_n,sliding_o,sliding_o))   ## for output layer neuron1,
 b_o = np.random.normal(0, wgt_width, (layero_n,)) #bias--output layer
 
 # learning rate
@@ -163,7 +163,7 @@ for k in range(epoch):
         delta_1 = o - y[inx, :]
 
         delta_2 = acti(o, derive=True)
-        print('delta2',delta_2)
+        #print('delta2',delta_2)
 
         '''for uuu in range(layero_n):
             for hhh in range(layerh_n+1):

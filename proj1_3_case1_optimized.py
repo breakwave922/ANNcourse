@@ -10,7 +10,7 @@ import random
 import csv
 import time
 
-np.random.seed(3000)  # this is what I used to get your random numbers!!!
+np.random.seed(1000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 # our nonlinear function (and its derivative); lam = 1 (so fixed)
@@ -19,9 +19,11 @@ np.random.seed(3000)  # this is what I used to get your random numbers!!!
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))'''
 
-def acti(x, lamda=1, derive=False):
+def acti(x, lamda=0.1, derive=False, entropy=False):
     if derive:
         return lamda * (x * (1 - x))
+    if entropy:
+        return lamda * 1.0 + (x - x)
     return 1 / (1 + np.exp(-lamda*x))
 
 
@@ -72,8 +74,8 @@ for i in range(10):
     train_dat[i, :, :]=np.append(train_dat_temp,i*np.ones((train_dat.shape[1],1)),axis=1)
 
 #initialize wgt
-wgt_width=1
-nh_w = np.random.normal(0, wgt_width, (feature_n,share_wgt_dim,share_wgt_dim))   ##hidden layer feature maps
+wgt_width=0.1
+nh_w = np.random.normal(0, wgt_width, (feature_n,share_wgt_dim,share_wgt_dim))/np.sqrt(feature_n*share_wgt_dim*share_wgt_dim)   ##hidden layer feature maps
 #n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
 b_h = np.random.normal(0, wgt_width, (feature_n,)) #bias
 #b_h2 = np.random.normal(0, 1, (1,)) #bias
@@ -84,11 +86,11 @@ b_h = np.random.normal(0, wgt_width, (feature_n,)) #bias
 
 #no_w = np.random.normal(0, 1, (layero_n,layerh_n+1))    ## for output layer neuron1,including bias, each row of wgt is used for 1 output neuron
 #no_w = np.random.normal(0, wgt_width, (layero_n,layerh_n2+1))    ## for output layer neuron1, last one is bias
-no_w = np.random.normal(0, wgt_width, (layero_n,feature_n,sliding_o,sliding_o))    ## for output layer neuron1,
+no_w = np.random.normal(0, wgt_width, (layero_n,feature_n,sliding_o,sliding_o))/np.sqrt(layero_n*feature_n*sliding_o**2)     ## for output layer neuron1,
 b_o = np.random.normal(0, wgt_width, (layero_n,)) #bias--output layer
 
 # learning rate
-eta = 1
+eta = 2
 
 # target output
 y=np.diag(np.ones((layero_n,)))
@@ -99,11 +101,11 @@ y[0]=0
 # Epochs
 ###############################################
 traindata=train_dat
-epoch =30 # how many epochs?
+epoch =50 # how many epochs?
 err = np.zeros((epoch, 1))  # lets record error to plot (get a convergence plot)
 inds = np.arange(np.size(traindata,0))  # array of our training indices (data point index references)
 inds_dig=np.arange(np.size(traindata,1))
-img_dig=1  ###for choosing how many img per dig to train
+img_dig=2  ###for choosing how many img per dig to train
 #inds=np.arange(1)
 #inds[0]=4
 #f = IntProgress(min=0, max=epoch)  # instantiate the bar (you can "see" how long alg takes to run)
@@ -137,7 +139,8 @@ for k in range(epoch):
             o = acti(oo)  # result of output 0&1 !!!
 
             ###calculating error
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx,:]), 2.0)).sum()
+            #err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx,:]), 2.0)).sum()
+            err[k]=err[k]+((1-y[inx,:])*np.log(1-o)-y[inx,:]*np.log(o)).sum()
 
             # backprop time!!! ################################
             # output layer
@@ -145,8 +148,8 @@ for k in range(epoch):
             delta_ob = np.zeros((layero_n,))
             delta_1 = o - y[inx, :]
 
-            delta_2 = acti(o, derive=True)
-            #print('delta2', delta_2)
+            delta_2 = acti(o, entropy=True)
+           # print('delta2', delta_2)
 
 
             delta_hw=np.zeros((layero_n,feature_n, sliding_o, sliding_o))   ###for calculating hidden layer wgt updates
@@ -155,9 +158,12 @@ for k in range(epoch):
                 delta_ow[uuu, :, :, :] = delta_1[uuu] * delta_2[uuu] * v[:, :, :]
                 delta_hw[uuu, :, :, :] = delta_1[uuu] * delta_2[uuu] * no_w[uuu,:, :, :]
 
+                #delta_ow=np.reshape(np.array([(delta_1 * delta_2)]).T @ np.array([v.flatten()]),(layero_n,feature_n,sliding_o,sliding_o))
+
+
             delta_ob = delta_1 * delta_2
 
-            #### for hidden layer
+            np.array([(delta_1 * delta_2)]).T            #### for hidden layer
             delta_hw=delta_hw.sum(axis=0)   ###sum up for calculating hidden layer
 
             delta_3 = acti(v[:, :, :], derive=True)
