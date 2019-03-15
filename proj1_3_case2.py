@@ -19,9 +19,10 @@ np.random.seed(3000)  # this is what I used to get your random numbers!!!
         return 1 - x*x #(np.square(x))
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))'''
 
-def acti(x, lamda=0.05, derive=False):
+def acti(x, lamda=0.3, derive=False, entropy=False):
     if derive:
-        #return lamda * (x * (1 - x))
+        return lamda * (x * (1 - x))
+    if entropy:
         return lamda * 1.0 + (x - x)
     return 1 / (1 + np.exp(-lamda*x))
 
@@ -73,7 +74,7 @@ for i in range(10):
     train_dat[i, :, :]=np.append(train_dat_temp,i*np.ones((train_dat.shape[1],1)),axis=1)
 
 #initialize wgt
-wgt_width=1
+wgt_width=0.1
 nh_w = np.random.normal(0, wgt_width, (feature_n,share_wgt_dim,share_wgt_dim))  ##hidden layer feature maps
 #n2_w = np.random.normal(0, 1, (img_dim,img_dim))   ##hidden layer feature maps-2
 b_h = np.random.normal(0, wgt_width, (feature_n,)) #bias
@@ -88,7 +89,7 @@ no_w = np.random.normal(0, wgt_width, (layero_n,layerh_n2+1))    ## for output l
 #b_o = np.random.normal(0, wgt_width, (layero_n,)) #bias--output layer
 
 # learning rate
-eta = 0.3
+eta = 3
 
 # target output
 y=np.diag(np.ones((layero_n,)))
@@ -142,14 +143,16 @@ for k in range(epoch):
             o = acti(oo)  # result of output 0&1 !!!
 
             ###calculating error
-            err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx,:]), 2.0)).sum()
+            #err[k] = err[k] + ((1.0 / 2.0) * np.power((o - y[inx,:]), 2.0)).sum()
+            err[k]=err[k]+((1-y[inx,:])*np.log(1-o)-y[inx,:]*np.log(o)).sum()
+
 
             # backprop time!!! ################################
             # output layer
             delta_ow = np.zeros((layero_n,layerh_n2+1)) ## last term is for bias
 
             delta_1 = o - y[inx, :]
-            delta_2 = acti(o, derive=True)
+            delta_2 = acti(o, entropy=True)
             #print('delta2',delta_2)
 
             # this is the wgt update for for wgt from h2-output layer
