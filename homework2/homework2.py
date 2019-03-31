@@ -42,7 +42,7 @@ for t in range(ite):
             if nn!=minid_ind:
                 W[nn, :] = W[nn, :] + alpha * (X[i, :] - W[nn, :])
 
-    plt.scatter(W[:, 0], W[:, 1], alpha=1)
+    plt.scatter(W[:, 0], W[:, 1], alpha=1)  ###plot current one
 
 
 '''# our nonlinear function (and its derivative); lam = 1 (so fixed)
