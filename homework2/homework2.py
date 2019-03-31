@@ -19,9 +19,9 @@ np.random.seed(1000)  # this is what I used to get your random numbers!!!
 X=np.array([[0,0],[-1,0],[0,-1],[3,0],[4,0],[3.5,1],[4,1]])
 
 #### weight
-W=np.array([[1,1],[-2,-2],[3,-1]])
+W=np.array([[1.0,1.0],[-2.0,-2.0],[3.0,-1.0]])
 
-ite=100
+ite=500
 
 plt.scatter(W[:,0],W[:,1],alpha=1)
 plt.scatter(X[:,0],X[:,1],c=[1,0,0],alpha=1)
@@ -30,19 +30,23 @@ plt.scatter(X[:,0],X[:,1],c=[1,0,0],alpha=1)
 plt.show()
 
 for t in range(ite):
+    print(t)
     alpha = (1 - ((t+1)/ite)) ###learning rate
     for i in range(np.size(X,0)):
         dist=np.linalg.norm(W-X[i,:],axis=1)
         minid_ind=np.argmin(dist, axis=0) ###find the winning neuron
         ###update the winning neurons
-        W[minid_ind,:]=W[minid_ind,:]+alpha*(X[i,:]- W[minid_ind,:])
+        W[minid_ind,:]+=alpha*(X[i,:]- W[minid_ind,:])
 
         ###updte the neigbor neurons
         for nn in range(np.size(W,0)):
             if nn!=minid_ind:
-                W[nn, :] = W[nn, :] + alpha * (X[i, :] - W[nn, :])
+                W[nn, :] +=  alpha * (X[i, :] - W[nn, :])
+    plt.scatter(W[:, 0], W[:, 1], c=[0, 1, 0], alpha=1)  ###plot current one
+    plt.scatter(X[:, 0], X[:, 1], c=[1, 0, 0], alpha=1)
+    plt.pause(0.05)
 
-    plt.scatter(W[:, 0], W[:, 1], alpha=1)  ###plot current one
+plt.show()
 
 
 '''# our nonlinear function (and its derivative); lam = 1 (so fixed)
