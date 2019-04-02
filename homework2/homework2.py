@@ -10,7 +10,7 @@ import random
 import csv
 import time
 
-np.random.seed(1000)  # this is what I used to get your random numbers!!!
+np.random.seed(2000)  # this is what I used to get your random numbers!!!
 
 ###feng's code###
 
@@ -23,9 +23,9 @@ W=np.array([[1.0,1.0],[-2.0,-2.0],[3.0,-1.0]])
 
 ite=200
 
-plt.scatter(W[:,0],W[:,1],alpha=1)
-plt.scatter(X[:,0],X[:,1],c=[1,0,0],alpha=1)
-plt.show()
+scat1=plt.scatter(W[:,0],W[:,1],c=[0,1,0],alpha=1)
+scat2=plt.scatter(X[:,0],X[:,1],c=[1,0,0],alpha=1,marker='+')
+plt.pause(0.05)
 
 for t in range(ite):
     print(t)
@@ -39,14 +39,17 @@ for t in range(ite):
 
         ###updte the neigbor neurons
         for nn in range(np.size(W,0)):
-            if (nn!=minid_ind)&(np.linalg.norm(W[minid_ind,:]-W[nn,:],axis=0)<=2):
+            if (nn!=minid_ind)&(np.linalg.norm(W[minid_ind,:]-W[nn,:],axis=0)<=1):
                 W[nn, :] +=  alpha * (X[inds[i], :] - W[nn, :])
-    plt.scatter(W[:, 0], W[:, 1], c=[0, 1, 0], alpha=1)  ###plot current one
-    plt.scatter(X[:, 0], X[:, 1], c=[1, 0, 0], alpha=1)
+    scat1.remove()
+    scat2.remove()
+    plt.draw()
+    scat1=plt.scatter(W[:, 0], W[:, 1], c=[0,1,0], alpha=0.5)  ###plot current one
+    scat2=plt.scatter(X[:, 0], X[:, 1], c=[1,0,0], alpha=1,marker='+')
     plt.pause(0.05)
 
 plt.show()
-
+print(W)
 
 '''# our nonlinear function (and its derivative); lam = 1 (so fixed)
 def acti(x, derive=False):
