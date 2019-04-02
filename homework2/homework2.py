@@ -43,7 +43,6 @@ for t in range(ite):
                 W[nn, :] +=  alpha * (X[inds[i], :] - W[nn, :])
     scat1.remove()
     scat2.remove()
-    plt.draw()
     scat1=plt.scatter(W[:, 0], W[:, 1], c=[0,1,0], alpha=0.5)  ###plot current one
     scat2=plt.scatter(X[:, 0], X[:, 1], c=[1,0,0], alpha=1,marker='+')
     plt.pause(0.05)
